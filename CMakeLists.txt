@@ -24,6 +24,7 @@ add_executable(Graphite WIN32
 target_include_directories(Graphite PRIVATE
     graphite
     external/entt/single_include/entt
+    external/glm
 )
 
 target_link_libraries(Graphite PRIVATE
