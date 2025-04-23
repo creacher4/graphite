@@ -2,7 +2,7 @@
 
 Application::Application(HINSTANCE hInstance)
 {
-    m_Window = std::make_unique<PlatformWindow>(hInstance, 1280, 720, L"DX11 Sandbox");
+    m_Window = std::make_unique<PlatformWindow>(hInstance, 1280, 720, L"Graphite");
     m_Engine = std::make_unique<Engine>();
     m_Engine->Init(m_Window->GetHWND());
 }

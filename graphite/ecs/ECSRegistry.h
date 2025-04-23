@@ -7,20 +7,20 @@ class ECSRegistry
 public:
     ECSRegistry() = default;
 
-    entt::entity CreateEntity() { return registry.create(); }
+    entt::entity CreateEntity() { return m_Registry.create(); }
 
     template <typename T, typename... Args>
     void AddComponent(entt::entity e, Args &&...args)
     {
-        registry.emplace<T>(e, std::forward<Args>(args)...);
+        m_Registry.emplace<T>(e, std::forward<Args>(args)...);
     }
 
-    template <typename... T>
+    template <typename... Components>
     auto View()
     {
-        return registry.view<T...>();
+        return m_Registry.view<Components...>();
     }
 
 private:
-    entt::registry registry;
+    entt::registry m_Registry;
 };

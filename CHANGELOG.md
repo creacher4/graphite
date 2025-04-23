@@ -9,6 +9,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- `TransformComponent` and `MeshComponent` for ECS
+- ECS debug output using `outputDebugStringA`
+- First test entity using primitive ID
+- GLM integration for vector/matrix maths
+
+### Changed
+
+- Refactored ECS iteration to use proper `entt` `view.each()` syntax for structured bindings
+- Removed `NameComponent` used in earlier tests
+
+### Fixed
+
+- Iterator error caused by incorrect use of `entt::view` in range-based for loop
+- Missing GLM include error in `TransformComponent`
+
 ---
 
 ## [0.1.0] – 2025-04-23

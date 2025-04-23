@@ -2,12 +2,10 @@
 #include "rendering/Renderer.h"
 #include "ecs/ECSRegistry.h"
 #include "input/InputManager.h"
-#include <iostream>
-
-struct NameComponent
-{
-    std::string name;
-};
+#include "ecs/TransformComponent.h"
+#include "ecs/MeshComponent.h"
+#include <string>
+#include <sstream>
 
 void Engine::Init(HWND hwnd)
 {
@@ -19,16 +17,23 @@ void Engine::Init(HWND hwnd)
 
     // create test entity
     auto entity = m_Registry->CreateEntity();
-    m_Registry->AddComponent<NameComponent>(entity, NameComponent{"TestEntity"});
+    m_Registry->AddComponent<TransformComponent>(entity); // default transform
+    m_Registry->AddComponent<MeshComponent>(entity, MeshComponent{"Cube"});
 }
 
 void Engine::Update()
 {
-    auto view = m_Registry->View<NameComponent>();
-    for (auto entity : view)
+    auto view = m_Registry->View<TransformComponent, MeshComponent>();
+
+    for (auto [entity, transform, mesh] : view.each())
     {
-        auto &name = view.get<NameComponent>(entity);
-        OutputDebugStringA(("[ECS] Entity Name: " + name.name + "\n").c_str());
+        std::ostringstream oss;
+        oss << "[ECS Debug] Entity found with MeshID: " << mesh.primitiveID
+            << " | Position: (" << transform.position.x
+            << ", " << transform.position.y
+            << ", " << transform.position.z << ")\n";
+
+        OutputDebugStringA(oss.str().c_str());
     }
 }
 
