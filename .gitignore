@@ -1,12 +1,21 @@
-CMakeLists.txt.user
+# build directories
+build/
+bin/
+obj/
+*.exe
+*.lib
+*.pdb
+*.ilk
+
+# CMake
+CMakeFiles/
 CMakeCache.txt
-CMakeFiles
-CMakeScripts
-Testing
-Makefile
 cmake_install.cmake
-install_manifest.txt
-compile_commands.json
-CTestTestfile.cmake
-_deps
-CMakeUserPresets.json
+Makefile
+
+# vscode settings
+.vscode/
+
+# logs and temp files
+*.log
+*.tmp
