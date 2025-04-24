@@ -11,6 +11,8 @@ public:
     void BeginFrame();
     void EndFrame();
 
+    ID3D11Device *GetDevice() const { return m_Device.Get(); }
+
 private:
     Microsoft::WRL::ComPtr<ID3D11Device> m_Device;
     Microsoft::WRL::ComPtr<ID3D11DeviceContext> m_Context;

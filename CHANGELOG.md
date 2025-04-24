@@ -15,11 +15,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - ECS debug output using `outputDebugStringA`
 - First test entity using primitive ID
 - GLM integration for vector/matrix maths
+- `Vertex` struct for Position, Normal and UV
+- `Mesh` struct with `ComPtr`-managed vertex/index buffers and index count
+- Cube primitive generation
+- `MeshComponent` primitive ID lookup integrated with `ResourceManager`
+- `README.md`
 
 ### Changed
 
 - Refactored ECS iteration to use proper `entt` `view.each()` syntax for structured bindings
 - Removed `NameComponent` used in earlier tests
+- `Engine` now initializes `ResourceManager` after `Renderer`
+- `Renderer` exposes `GetDevice()` for external buffer creation
 
 ### Fixed
 

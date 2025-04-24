@@ -18,6 +18,7 @@ add_executable(Graphite WIN32
     graphite/core/Engine.cpp
     graphite/platform/PlatformWindow.cpp
     graphite/rendering/Renderer.cpp
+    graphite/resources/ResourceManager.cpp
 )
 
 # add include directories
