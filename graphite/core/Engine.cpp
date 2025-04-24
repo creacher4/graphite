@@ -15,6 +15,12 @@ void Engine::Init(HWND hwnd)
 
     m_Renderer->Init(hwnd);
 
+    m_ResourceManager = std::make_unique<ResourceManager>();
+    if (!m_ResourceManager->InitPrimitiveMeshes(m_Renderer->GetDevice()))
+    {
+        throw std::runtime_error("Failed to initialize primitive meshes.");
+    }
+
     // create test entity
     auto entity = m_Registry->CreateEntity();
     m_Registry->AddComponent<TransformComponent>(entity); // default transform
