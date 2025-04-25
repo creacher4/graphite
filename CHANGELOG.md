@@ -11,6 +11,57 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [v0.3.0] – 2025-04-25
+
+### Added
+
+- System Architecture:
+  - Introduced `ISystem` interface defining `Init()`, `Update()`, and `Shutdown()` methods
+  - Implemented `SystemManager` class to manage `ISystem` lifecycle (`InitAll`, `UpdateAll`, `ShutdownAll`)
+  - Created functional `RenderSystem` and `ResizeSystem` inheriting from `ISystem`. (InputSystem remains placeholder)
+- Device Management:
+  - Implemented `DeviceManager` to centralize `ID3D11Device`, `ID3D11DeviceContext`, and `IDXGISwapChain` creation, ownership, and shutdown
+  - Added `DeviceManager::ResizeSwapChain` to handle window resize events, including recreating the back buffer Render Target View (`m_BackBufferRTV`)
+  - Added accessors (`GetDevice`, `GetContext`, `GetSwapChain`, `GetBackBufferRTV`) to `DeviceManager`
+- Asset Management:
+  - Implemented `AssetManager` to centralize resource loading and management
+  - Added `AssetManager::InitPrimitiveMeshes` to load hardcoded cube mesh data and create immutable vertex/index buffers using `DeviceManager`
+  - Added `AssetManager::Shutdown` to release loaded mesh resources
+- Dependency Injection:
+  - Implemented dependency injection via setter methods (`SetDeviceManager`, `SetAssetManager`, etc.) called during `Engine::Init` to provide systems and managers with required dependencies
+  - RenderSystem now exposes `SetViewProjection(view, proj)` and Application/Engine pass current view/proj each frame
+- Resize Handling:
+  - Completed resize event pipeline: `PlatformWindow` -> `Engine` -> `ResizeSystem`
+  - `ResizeSystem::OnResize` now coordinates calls to `DeviceManager::ResizeSwapChain` and `RenderSystem::OnResize`
+  - Implemented `RenderSystem::OnResize` which calls `Renderer::OnResize`
+  - Implemented `Renderer::OnResize` which re-initializes the `GBuffer` with new dimensions using the `DeviceManager`
+
+### Changed
+
+- Engine Core:
+  - `Engine` now owns and initializes `DeviceManager` and `AssetManager`
+  - `Engine::Init` orchestrates manager creation and system registration/dependency injection
+  - `Engine::Shutdown` now correctly calls shutdown methods on `SystemManager`, `AssetManager`, and `DeviceManager` in the appropriate order
+  - `Application::Run` now passes temporary view/projection matrices from `Engine` to `RenderSystem` each frame
+- Rendering Pipeline:
+  - `Renderer` class refactored: no longer owns device/context/swapchain; uses injected `DeviceManager`
+  - `RenderSystem::Update` now orchestrates the frame rendering sequence by calling methods on its `Renderer` instance (`UpdatePerFrameConstants`, `BeginFrame`, `GeometryPass`, `EndFrame`)
+  - `Renderer::EndFrame` now uses `DeviceManager` to get the back buffer RTV and swap chain for ImGui rendering and presentation
+- Resource Management:
+  - `AssetManager` now responsible for primitive mesh creation, using the centralized `DeviceManager`
+
+### Removed
+
+- `ResourceManager` class and associated files (functionality merged into `AssetManager`)
+- Direct device/context/swapchain creation and ownership within the `Renderer` class
+- `Engine::Render()` method and all direct calls to it
+
+### Fixed
+
+- Fixed issue where the back-buffer wasn't being cleared properly (in `Renderer::EndFrame()`), causing ghosting/artifacts on the window
+
+---
+
 ## [0.2.0] – 2025-04-25
 
 ### Added

@@ -9,8 +9,20 @@ LRESULT CALLBACK PlatformWindow::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPA
     if (ImGui_ImplWin32_WndProcHandler(hwnd, msg, wParam, lParam))
         return true;
 
+    // recover pointer
+    PlatformWindow *window = reinterpret_cast<PlatformWindow *>(
+        GetWindowLongPtr(hwnd, GWLP_USERDATA));
+
     switch (msg)
     {
+    case WM_SIZE:
+        if (window)
+        {
+            int w = LOWORD(lParam);
+            int h = HIWORD(lParam);
+            window->HandleResize(w, h);
+        }
+        return 0;
     case WM_DESTROY:
         PostQuitMessage(0);
         return 0;
@@ -34,8 +46,20 @@ PlatformWindow::PlatformWindow(HINSTANCE hInstance, int width, int height, const
     if (!m_HWND)
         throw std::runtime_error("Failed to create window.");
 
+    SetWindowLongPtr(m_HWND, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(this));
+
     ShowWindow(m_HWND, SW_SHOWDEFAULT);
     UpdateWindow(m_HWND);
+}
+
+void PlatformWindow::HandleResize(int width, int height)
+{
+    m_Width = width;
+    m_Height = height;
+    if (m_OnResize)
+    {
+        m_OnResize(width, height);
+    }
 }
 
 PlatformWindow::~PlatformWindow()
