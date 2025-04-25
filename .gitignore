@@ -19,3 +19,6 @@ Makefile
 # logs and temp files
 *.log
 *.tmp
+
+# whatever
+imgui.ini

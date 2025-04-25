@@ -1,8 +1,14 @@
 #include "PlatformWindow.h"
 #include <stdexcept>
+#include <imgui_impl_win32.h>
+
+extern LRESULT ImGui_ImplWin32_WndProcHandler(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 LRESULT CALLBACK PlatformWindow::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
+    if (ImGui_ImplWin32_WndProcHandler(hwnd, msg, wParam, lParam))
+        return true;
+
     switch (msg)
     {
     case WM_DESTROY:
@@ -13,7 +19,7 @@ LRESULT CALLBACK PlatformWindow::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPA
 }
 
 PlatformWindow::PlatformWindow(HINSTANCE hInstance, int width, int height, const std::wstring &title)
-    : m_HInstance(hInstance)
+    : m_HInstance(hInstance), m_Width(width), m_Height(height)
 {
     WNDCLASSEX wc = {sizeof(WNDCLASSEX), CS_CLASSDC, WndProc, 0L, 0L, hInstance, NULL, NULL, NULL, NULL, L"DX11Win", NULL};
     RegisterClassEx(&wc);
@@ -43,7 +49,10 @@ bool PlatformWindow::ProcessMessages()
     while (PeekMessage(&msg, nullptr, 0U, 0U, PM_REMOVE))
     {
         if (msg.message == WM_QUIT)
+        {
+            OutputDebugStringA("WM_QUIT received, exiting application.\n");
             return false;
+        }
 
         TranslateMessage(&msg);
         DispatchMessage(&msg);
