@@ -16,14 +16,17 @@ add_executable(Graphite WIN32
     # source files
     graphite/core/Application.cpp
     graphite/core/Engine.cpp
+    graphite/core/SystemManager.cpp
     graphite/platform/PlatformWindow.cpp
     graphite/rendering/Renderer.cpp
-    graphite/rendering/Gbuffer.cpp
-    graphite/resources/ResourceManager.cpp
+    graphite/rendering/GBuffer.cpp
+    graphite/managers/AssetManager.cpp
+    graphite/managers/DeviceManager.cpp
+    graphite/systems/RenderSystem.cpp
+    graphite/systems/ResizeSystem.cpp
 
     # utils
     utils/ShaderUtils.cpp
-
 
     # external sources
     external/imgui/imgui.cpp

@@ -2,34 +2,31 @@
 
 #include "rendering/GBuffer.h"
 #include "rendering/ConstantBuffers.h"
-#include "core/ECSRegistry.h"
-#include "resources/ResourceManager.h"
+#include "ecs/ECSRegistry.h"
+#include "managers/AssetManager.h"
 #include <Windows.h>
 #include <d3d11.h>
 #include <wrl/client.h>
 #include <glm/glm.hpp>
+
+class DeviceManager;
 
 class Renderer
 {
 public:
     ~Renderer();
 
-    void Init(HWND hwnd, UINT width, UINT height);
+    void Init(DeviceManager *deviceManager, HWND hwnd, UINT width, UINT height);
+    void OnResize(UINT width, UINT height);
     void BeginFrame();
-    void GeometryPass(ECSRegistry &registry, ResourceManager &resources);
+    void GeometryPass(ECSRegistry &registry, AssetManager &assetManager);
     void EndFrame();
-    // void OnResize(UINT width, UINT height);
     void UpdatePerFrameConstants(const glm::mat4 &view, const glm::mat4 &proj);
-
-    ID3D11Device *GetDevice() const { return m_Device.Get(); }
 
 private:
     GBuffer m_GBuffer;
 
-    Microsoft::WRL::ComPtr<ID3D11Device> m_Device;
-    Microsoft::WRL::ComPtr<ID3D11DeviceContext> m_Context;
-    Microsoft::WRL::ComPtr<IDXGISwapChain> m_SwapChain;
-    Microsoft::WRL::ComPtr<ID3D11RenderTargetView> m_BackBufferRTV;
+    DeviceManager *m_DeviceManager = nullptr;
 
     // rasterizer state
     Microsoft::WRL::ComPtr<ID3D11RasterizerState> m_rasterizerStateDefault;

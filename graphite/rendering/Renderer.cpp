@@ -1,4 +1,5 @@
 #include "Renderer.h"
+#include "managers/DeviceManager.h"
 #include "ShaderUtils.h"
 #include <stdexcept>
 #include "ecs/TransformComponent.h"
@@ -17,51 +18,21 @@ Renderer::~Renderer()
     ImGui::DestroyContext();
 }
 
-void Renderer::Init(HWND hwnd, UINT width, UINT height)
+void Renderer::Init(DeviceManager *deviceManager, HWND hwnd, UINT width, UINT height)
 {
-    DXGI_SWAP_CHAIN_DESC scd = {};
-    scd.BufferCount = 1;
-    scd.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-    scd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-    scd.OutputWindow = hwnd;
-    scd.SampleDesc.Count = 1;
-    scd.Windowed = TRUE;
-    scd.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
+    m_DeviceManager = deviceManager;
+    auto *device = deviceManager->GetDevice();
+    auto *context = deviceManager->GetContext();
 
-    UINT createDeviceFlags = 0;
-#if _DEBUG
-    createDeviceFlags |= D3D11_CREATE_DEVICE_DEBUG;
-#endif
+    HRESULT hr;
 
-    D3D_FEATURE_LEVEL featureLevel;
-    const D3D_FEATURE_LEVEL featureLevels[] = {
-        D3D_FEATURE_LEVEL_11_0};
-
-    HRESULT hr = D3D11CreateDeviceAndSwapChain(
-        nullptr,
-        D3D_DRIVER_TYPE_HARDWARE,
-        nullptr,
-        createDeviceFlags,
-        featureLevels,
-        1,
-        D3D11_SDK_VERSION,
-        &scd,
-        m_SwapChain.GetAddressOf(),
-        m_Device.GetAddressOf(),
-        &featureLevel,
-        m_Context.GetAddressOf());
-
-    if (FAILED(hr))
-    {
-        throw std::runtime_error("Failed to create DX11 device and swap chain.");
-    }
-
+    // rasterizer state
     D3D11_RASTERIZER_DESC rasterDesc = {};
     rasterDesc.FillMode = D3D11_FILL_SOLID;
     rasterDesc.CullMode = D3D11_CULL_NONE;
     rasterDesc.FrontCounterClockwise = FALSE;
     rasterDesc.DepthClipEnable = TRUE;
-    hr = m_Device->CreateRasterizerState(
+    hr = device->CreateRasterizerState(
         &rasterDesc,
         m_rasterizerStateDefault.GetAddressOf());
     if (FAILED(hr))
@@ -74,7 +45,7 @@ void Renderer::Init(HWND hwnd, UINT width, UINT height)
     depthDesc.DepthEnable = TRUE;
     depthDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
     depthDesc.DepthFunc = D3D11_COMPARISON_LESS;
-    hr = m_Device->CreateDepthStencilState(
+    hr = device->CreateDepthStencilState(
         &depthDesc,
         m_depthStencilStateDefault.GetAddressOf());
     if (FAILED(hr))
@@ -82,14 +53,12 @@ void Renderer::Init(HWND hwnd, UINT width, UINT height)
         throw std::runtime_error("Failed to create depth stencil state.");
     }
 
-    if (!m_GBuffer.Init(m_Device.Get(), width, height))
+    if (!m_GBuffer.Init(device, width, height))
     {
         throw std::runtime_error("Failed to initialize GBuffer.");
     }
 
     Microsoft::WRL::ComPtr<ID3D11Texture2D> backBuffer;
-    m_SwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<void **>(backBuffer.GetAddressOf()));
-    m_Device->CreateRenderTargetView(backBuffer.Get(), nullptr, m_BackBufferRTV.GetAddressOf());
 
     {
         // imgui
@@ -100,7 +69,7 @@ void Renderer::Init(HWND hwnd, UINT width, UINT height)
         ImGui::StyleColorsDark();
 
         ImGui_ImplWin32_Init(hwnd);
-        ImGui_ImplDX11_Init(m_Device.Get(), m_Context.Get());
+        ImGui_ImplDX11_Init(device, context);
     }
 
     {
@@ -110,7 +79,7 @@ void Renderer::Init(HWND hwnd, UINT width, UINT height)
         {
             throw std::runtime_error("Failed to compile vertex shader.");
         }
-        HRESULT hr = m_Device->CreateVertexShader(
+        HRESULT hr = device->CreateVertexShader(
             vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(),
             nullptr, m_vsGeometry.GetAddressOf());
         if (FAILED(hr))
@@ -124,7 +93,7 @@ void Renderer::Init(HWND hwnd, UINT width, UINT height)
         {
             throw std::runtime_error("Failed to compile pixel shader.");
         }
-        hr = m_Device->CreatePixelShader(
+        hr = device->CreatePixelShader(
             psBlob->GetBufferPointer(), psBlob->GetBufferSize(),
             nullptr, m_psGeometry.GetAddressOf());
         if (FAILED(hr))
@@ -138,7 +107,7 @@ void Renderer::Init(HWND hwnd, UINT width, UINT height)
             {"NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0},
             {"TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 24, D3D11_INPUT_PER_VERTEX_DATA, 0},
         };
-        hr = m_Device->CreateInputLayout(
+        hr = device->CreateInputLayout(
             layoutDesc, ARRAYSIZE(layoutDesc),
             vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(),
             m_inputLayout.GetAddressOf());
@@ -154,7 +123,7 @@ void Renderer::Init(HWND hwnd, UINT width, UINT height)
             cbDesc.ByteWidth = sizeof(PerFrameData);
             cbDesc.Usage = D3D11_USAGE_DYNAMIC;
             cbDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-            HRESULT hr = m_Device->CreateBuffer(&cbDesc, nullptr, m_cbPerFrame.GetAddressOf());
+            HRESULT hr = device->CreateBuffer(&cbDesc, nullptr, m_cbPerFrame.GetAddressOf());
             if (FAILED(hr))
             {
                 throw std::runtime_error("Failed to create per-frame constant buffer.");
@@ -167,7 +136,7 @@ void Renderer::Init(HWND hwnd, UINT width, UINT height)
             cbDesc.ByteWidth = sizeof(PerObjectData);
             cbDesc.Usage = D3D11_USAGE_DYNAMIC;
             cbDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-            HRESULT hr = m_Device->CreateBuffer(&cbDesc, nullptr, m_cbPerObject.GetAddressOf());
+            HRESULT hr = device->CreateBuffer(&cbDesc, nullptr, m_cbPerObject.GetAddressOf());
             if (FAILED(hr))
             {
                 throw std::runtime_error("Failed to create per-object constant buffer.");
@@ -178,36 +147,51 @@ void Renderer::Init(HWND hwnd, UINT width, UINT height)
 
 void Renderer::UpdatePerFrameConstants(const glm::mat4 &view, const glm::mat4 &proj)
 {
+    auto *context = m_DeviceManager->GetContext();
     D3D11_MAPPED_SUBRESOURCE mapped;
-    if (SUCCEEDED(m_Context->Map(m_cbPerFrame.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped)))
+    if (SUCCEEDED(context->Map(m_cbPerFrame.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped)))
     {
         auto *data = reinterpret_cast<PerFrameData *>(mapped.pData);
-        data->viewMatrix = view; // transpose if needed
+        data->viewMatrix = view;
         data->projectionMatrix = proj;
-        m_Context->Unmap(m_cbPerFrame.Get(), 0);
+        context->Unmap(m_cbPerFrame.Get(), 0);
+    }
+}
+
+void Renderer::OnResize(UINT width, UINT height)
+{
+    // reinitialize just the GBuffer
+    auto *device = m_DeviceManager->GetDevice();
+    auto *context = m_DeviceManager->GetContext();
+    if (!m_GBuffer.Init(device, width, height))
+    {
+        throw std::runtime_error("Failed to reinitialize GBuffer on resize.");
     }
 }
 
 void Renderer::BeginFrame()
 {
-    m_GBuffer.Bind(m_Context.Get());
-    m_GBuffer.Clear(m_Context.Get());
+    auto *context = m_DeviceManager->GetContext();
+    m_GBuffer.Bind(context);
+    m_GBuffer.Clear(context);
 }
 
-void Renderer::GeometryPass(ECSRegistry &registry, ResourceManager &resources)
+void Renderer::GeometryPass(ECSRegistry &registry, AssetManager &assets)
 {
-    m_Context->RSSetState(m_rasterizerStateDefault.Get());
-    m_Context->OMSetDepthStencilState(m_depthStencilStateDefault.Get(), 1);
+    auto *context = m_DeviceManager->GetContext();
+
+    context->RSSetState(m_rasterizerStateDefault.Get());
+    context->OMSetDepthStencilState(m_depthStencilStateDefault.Get(), 1);
 
     // bind pipeline state
-    m_Context->IASetInputLayout(m_inputLayout.Get());
-    m_Context->VSSetShader(m_vsGeometry.Get(), nullptr, 0);
-    m_Context->PSSetShader(m_psGeometry.Get(), nullptr, 0);
-    m_Context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+    context->IASetInputLayout(m_inputLayout.Get());
+    context->VSSetShader(m_vsGeometry.Get(), nullptr, 0);
+    context->PSSetShader(m_psGeometry.Get(), nullptr, 0);
+    context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
     // bind constant buffers
-    m_Context->VSSetConstantBuffers(0, 1, m_cbPerFrame.GetAddressOf());
-    m_Context->VSSetConstantBuffers(1, 1, m_cbPerObject.GetAddressOf());
+    context->VSSetConstantBuffers(0, 1, m_cbPerFrame.GetAddressOf());
+    context->VSSetConstantBuffers(1, 1, m_cbPerObject.GetAddressOf());
 
     // loop through entities and draw
     auto view = registry.View<TransformComponent, MeshComponent>();
@@ -225,17 +209,17 @@ void Renderer::GeometryPass(ECSRegistry &registry, ResourceManager &resources)
         pod.worldMatrix = world;
 
         D3D11_MAPPED_SUBRESOURCE mapped;
-        if (SUCCEEDED(m_Context->Map(m_cbPerObject.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped)))
+        if (SUCCEEDED(context->Map(m_cbPerObject.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped)))
         {
             *reinterpret_cast<PerObjectData *>(mapped.pData) = pod;
-            m_Context->Unmap(m_cbPerObject.Get(), 0);
+            context->Unmap(m_cbPerObject.Get(), 0);
         }
 
         // fetch mesh
         OutputDebugStringA("[GeometryPass] Found Entity. PrimitiveID:\n");
         OutputDebugStringA(meshComp.primitiveID.c_str());
         OutputDebugStringA("\n");
-        Mesh *mesh = resources.GetPrimitiveMesh(meshComp.primitiveID);
+        auto *mesh = assets.GetMesh(meshComp.primitiveID);
         if (!mesh)
         {
             OutputDebugStringA("[GeometryPass][ERROR] Mesh not found!\n");
@@ -250,13 +234,13 @@ void Renderer::GeometryPass(ECSRegistry &registry, ResourceManager &resources)
 
         // bind vertex/index buffers
         UINT stride = sizeof(Vertex), offset = 0;
-        m_Context->IASetVertexBuffers(0, 1, mesh->vertexBuffer.GetAddressOf(), &stride, &offset);
-        m_Context->IASetIndexBuffer(mesh->indexBuffer.Get(), DXGI_FORMAT_R32_UINT, 0);
-        m_Context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+        context->IASetVertexBuffers(0, 1, mesh->vertexBuffer.GetAddressOf(), &stride, &offset);
+        context->IASetIndexBuffer(mesh->indexBuffer.Get(), DXGI_FORMAT_R32_UINT, 0);
+        context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
         // draw call
         OutputDebugStringA("[GeometryPass] Attempting draw call...\n");
-        m_Context->DrawIndexed(mesh->indexCount, 0, 0);
+        context->DrawIndexed(mesh->indexCount, 0, 0);
         OutputDebugStringA("[GeometryPass] Draw call complete.\n");
     }
 }
@@ -264,8 +248,15 @@ void Renderer::GeometryPass(ECSRegistry &registry, ResourceManager &resources)
 void Renderer::EndFrame()
 {
     // rebind back buffer
-    ID3D11RenderTargetView *backRTV = m_BackBufferRTV.Get();
-    m_Context->OMSetRenderTargets(1, &backRTV, nullptr);
+    auto *context = m_DeviceManager->GetContext();
+    auto *backRTV = m_DeviceManager->GetBackBufferRTV();
+    context->OMSetRenderTargets(1, &backRTV, nullptr);
+
+    // clear back buffer
+    // completely forgot about this, lol
+    // this is why the window was black and multiple instances of the imgui window were appearing
+    const float clearColor[4] = {0.2f, 0.2f, 0.2f, 1.0f};
+    context->ClearRenderTargetView(backRTV, clearColor);
 
     ImGui_ImplDX11_NewFrame();
     ImGui_ImplWin32_NewFrame();
@@ -298,5 +289,5 @@ void Renderer::EndFrame()
     ImGui::Render();
     ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
 
-    m_SwapChain->Present(1, 0);
+    m_DeviceManager->GetSwapChain()->Present(1, 0);
 }

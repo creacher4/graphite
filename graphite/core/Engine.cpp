@@ -22,18 +22,33 @@ void Engine::Init(HWND hwnd, UINT width, UINT height)
         aspect,
         0.1f, 100.0f);
 
-    // initialize subsystems
-    m_Renderer = std::make_unique<Renderer>();
+    // initialize systems
+    m_SystemManager = std::make_unique<SystemManager>();
     m_Registry = std::make_unique<ECSRegistry>();
-    m_Input = std::make_unique<InputManager>();
 
-    m_Renderer->Init(hwnd, width, height);
-
-    m_ResourceManager = std::make_unique<ResourceManager>();
-    if (!m_ResourceManager->InitPrimitiveMeshes(m_Renderer->GetDevice()))
+    // register subsystems
+    m_SystemManager->RegisterSystem(&m_InputSystem);
+    m_DeviceManager = std::make_unique<DeviceManager>();
+    m_DeviceManager->InitDevice(hwnd, width, height);
+    m_AssetManager = std::make_unique<AssetManager>();
+    m_AssetManager->SetDeviceManager(m_DeviceManager.get());
+    if (!m_AssetManager->InitPrimitiveMeshes())
     {
-        throw std::runtime_error("Failed to initialize primitive meshes.");
+        throw std::runtime_error("AssetManager failed to init primitives");
     }
+
+    m_RenderSystem.SetDeviceManager(m_DeviceManager.get());
+    m_RenderSystem.SetAssetManager(m_AssetManager.get());
+    m_RenderSystem.SetRegistry(m_Registry.get());
+    m_RenderSystem.SetWindowHandle(hwnd);
+    m_RenderSystem.SetWindowSize(m_Width, m_Height);
+    m_SystemManager->RegisterSystem(&m_RenderSystem);
+
+    m_ResizeSystem.SetDeviceManager(m_DeviceManager.get());
+    m_ResizeSystem.SetRenderSystem(&m_RenderSystem);
+    m_SystemManager->RegisterSystem(&m_ResizeSystem);
+
+    m_SystemManager->InitAll();
 
     // create test entity
     auto entity = m_Registry->CreateEntity();
@@ -43,24 +58,17 @@ void Engine::Init(HWND hwnd, UINT width, UINT height)
 
 void Engine::Update()
 {
-    auto view = m_Registry->View<TransformComponent, MeshComponent>();
-
-    for (auto [entity, transform, mesh] : view.each())
-    {
-        std::ostringstream oss;
-        oss << "[ECS Debug] Entity found with MeshID: " << mesh.primitiveID
-            << " | Position: (" << transform.position.x
-            << ", " << transform.position.y
-            << ", " << transform.position.z << ")\n";
-
-        OutputDebugStringA(oss.str().c_str());
-    }
+    m_SystemManager->UpdateAll();
 }
 
-void Engine::Render()
+void Engine::Shutdown()
 {
-    m_Renderer->UpdatePerFrameConstants(m_ViewMatrix, m_ProjectionMatrix);
-    m_Renderer->BeginFrame();
-    m_Renderer->GeometryPass(*m_Registry, *m_ResourceManager);
-    m_Renderer->EndFrame();
+    m_SystemManager->ShutdownAll();
+    m_AssetManager->Shutdown();
+    m_DeviceManager->Shutdown();
+}
+
+void Engine::OnResize(int width, int height)
+{
+    m_ResizeSystem.OnResize(width, height);
 }
