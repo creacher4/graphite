@@ -1,10 +1,9 @@
 #pragma once
 
-#include <glm/glm.hpp>
-
 struct Vertex
 {
-    glm::vec3 Position;
-    glm::vec3 Normal;
-    glm::vec2 TexCoord;
+    float Position[3];
+    float Normal[3];
+    float TexCoord[2];
 };
+// sizeof(Vertex) = 32 bytes
