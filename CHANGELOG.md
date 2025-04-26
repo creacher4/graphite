@@ -17,8 +17,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ### Changed
 
 - Camera:
-  - Cached `forward`, `right`, and `up` vectors inside `RecalcView()` and added an `Up()` accessor
-    - `Forward()`, `Right()`, and `Up()` now return those cached vectors instead of recomputing via matrix inversion
+  - Cached `forward`, `right` and `up` vectors inside `RecalcView()`
+  - `GetForward()`, `GetRight()` and `GetUp()` now return those cached vectors instead of recomputing via matrix inversion
 - AssetManager:
   - `GetMesh(const std::string&)` now returns `const MeshResource*` to enforce read-only access to shared mesh data
 - Engine:
