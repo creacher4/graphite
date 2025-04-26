@@ -106,4 +106,7 @@ public:
     float GetFovY() const { return m_fovY; }
     float GetNearZ() const { return m_nearZ; }
     float GetFarZ() const { return m_farZ; }
+
+    glm::vec3 GetPosition() const { return m_pos; }
+    glm::vec2 GetYawPitch() const { return {m_yaw, m_pitch}; }
 };

@@ -8,6 +8,7 @@
 class DeviceManager;
 class AssetManager;
 class ECSRegistry;
+class StatsSystem;
 
 class RenderSystem : public ISystem
 {
@@ -28,12 +29,18 @@ public:
     }
 
     void SetCamera(Camera *camera) { m_Camera = camera; }
+    void SetStatsSystem(StatsSystem *s) { m_stats = s; }
+
+    int GetDrawCallCount() const { return m_Renderer.GetDrawCallCount(); }
+    int GetTriangleCount() const { return m_Renderer.GetTriangleCount(); }
 
 private:
     DeviceManager *m_DeviceManager = nullptr;
     AssetManager *m_AssetManager = nullptr;
     ECSRegistry *m_Registry = nullptr;
     Camera *m_Camera = nullptr;
+    StatsSystem *m_stats = nullptr;
+
     HWND m_Hwnd = nullptr;
     UINT m_Width = 0;
     UINT m_Height = 0;

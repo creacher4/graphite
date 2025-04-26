@@ -5,6 +5,34 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),  
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.4.2] – 2025-04-27
+
+### Added
+
+- Stats panel:
+  - New `StatsSystem` gathers per-frame metrics (frame time, FPS, draw call count, triangle count, camera position & yaw/pitch) in `StatsSystem::Update()`
+  - New `StatsSystem::DrawImGui()` renders an ImGui “Engine Stats” window showing those metrics, toggleable with `F1`
+  - `Renderer` now tracks and exposes its draw calls and triangle count (reset in `BeginFrame`, incremented in `GeometryPass`) and accepts a `StatsSystem*` in `EndFrame()` to drive the UI
+- System wiring:
+  - `Engine::Init()` now creates, injects and registers the `StatsSystem` (before `RenderSystem`)
+  - `RenderSystem::Update()` passes its `StatsSystem*` into `Renderer::EndFrame()`
+
+### Changed
+
+- Renderer:
+  - `BeginFrame()` resets draw/triangle counters
+  - `GeometryPass()` increments counters per-mesh
+  - `EndFrame()` signature updated to take `StatsSystem*` and invoke `DrawImGui()`
+- RenderSystem:
+  - `Update()` now calls `m_Renderer.EndFrame(m_stats)` instead of parameterless `EndFrame()`
+- Engine:
+  - `OnResize()` updates camera’s projection aspect automatically
+  - Added injection of `StatsSystem` into both `RenderSystem` and `Renderer`
+
+### Fixed
+
+- Stats window remained updateless — now the system is registered and its `DrawImGui()` is invoked each frame
+
 ---
 
 ## [0.4.1] – 2025-04-26
