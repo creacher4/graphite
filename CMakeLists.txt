@@ -24,6 +24,8 @@ add_executable(Graphite WIN32
     graphite/managers/DeviceManager.cpp
     graphite/systems/RenderSystem.cpp
     graphite/systems/ResizeSystem.cpp
+    graphite/input/InputManager.cpp
+    graphite/systems/CameraController.cpp
 
     # utils
     utils/ShaderUtils.cpp

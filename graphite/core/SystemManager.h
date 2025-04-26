@@ -8,7 +8,7 @@ class SystemManager
 public:
     void RegisterSystem(ISystem *system);
     void InitAll();
-    void UpdateAll();
+    void UpdateAll(float deltaTime);
     void ShutdownAll();
 
 private:

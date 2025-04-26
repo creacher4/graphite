@@ -10,7 +10,7 @@ class ResizeSystem : public ISystem
 {
 public:
     void Init() override {}
-    void Update() override {}
+    void Update(float deltaTime) override {}
     void Shutdown() override {}
 
     void OnResize(int width, int height);

@@ -195,7 +195,7 @@ void Renderer::GeometryPass(ECSRegistry &registry, AssetManager &assets)
 
     // loop through entities and draw
     auto view = registry.View<TransformComponent, MeshComponent>();
-    OutputDebugStringA("[GeometryPass] Checking for entities to draw...\n");
+    // OutputDebugStringA("[GeometryPass] Checking for entities to draw...\n");
     for (auto [ent, transform, meshComp] : view.each())
     {
         PerObjectData pod{};
@@ -216,9 +216,9 @@ void Renderer::GeometryPass(ECSRegistry &registry, AssetManager &assets)
         }
 
         // fetch mesh
-        OutputDebugStringA("[GeometryPass] Found Entity. PrimitiveID:\n");
-        OutputDebugStringA(meshComp.primitiveID.c_str());
-        OutputDebugStringA("\n");
+        // OutputDebugStringA("[GeometryPass] Found Entity. PrimitiveID:\n");
+        // OutputDebugStringA(meshComp.primitiveID.c_str());
+        // OutputDebugStringA("\n");
         auto *mesh = assets.GetMesh(meshComp.primitiveID);
         if (!mesh)
         {
@@ -230,7 +230,7 @@ void Renderer::GeometryPass(ECSRegistry &registry, AssetManager &assets)
             OutputDebugStringA("[GeometryPass][ERROR] Mesh buffers not initialized!\n");
             continue;
         }
-        OutputDebugStringA("[GeometryPass] Found mesh.\n");
+        // OutputDebugStringA("[GeometryPass] Found mesh.\n");
 
         // bind vertex/index buffers
         UINT stride = sizeof(Vertex), offset = 0;
@@ -239,9 +239,9 @@ void Renderer::GeometryPass(ECSRegistry &registry, AssetManager &assets)
         context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
         // draw call
-        OutputDebugStringA("[GeometryPass] Attempting draw call...\n");
+        // OutputDebugStringA("[GeometryPass] Attempting draw call...\n");
         context->DrawIndexed(mesh->indexCount, 0, 0);
-        OutputDebugStringA("[GeometryPass] Draw call complete.\n");
+        // OutputDebugStringA("[GeometryPass] Draw call complete.\n");
     }
 }
 

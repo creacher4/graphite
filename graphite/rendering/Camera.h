@@ -1,0 +1,90 @@
+#pragma once
+#define GLM_ENABLE_EXPERIMENTAL
+
+#include <glm/vec3.hpp>
+#include <glm/gtc/quaternion.hpp>
+#include <glm/gtx/quaternion.hpp>
+#include <glm/mat4x4.hpp>
+#include <glm/gtc/constants.hpp>
+
+class Camera
+{
+    glm::vec3 m_pos{0, 0, 0};
+
+    float m_yaw = 0.0f;
+    float m_pitch = 0.0f;
+    float m_fovY, m_aspect, m_nearZ, m_farZ;
+
+    mutable glm::mat4 m_view, m_projection;
+    mutable bool m_dirtyView = true, m_dirtyProjection = true;
+
+    // quarternions can legit piss off bro
+    // i just want to use euler angles for now
+    void RecalcView() const
+    {
+        glm::vec3 forward{
+            cos(m_pitch) * sin(m_yaw),
+            sin(m_pitch),
+            cos(m_pitch) * cos(m_yaw)};
+
+        const glm::vec3 worldUp{0, 1, 0};
+        glm::vec3 right = glm::normalize(glm::cross(forward, worldUp));
+        glm::vec3 up = glm::cross(right, forward);
+
+        m_view = glm::lookAt(m_pos, m_pos + forward, up);
+        m_dirtyView = false;
+    }
+    void RecalcProjection() const
+    {
+        m_projection = glm::perspective(m_fovY, m_aspect, m_nearZ, m_farZ);
+        m_dirtyProjection = false;
+    }
+
+public:
+    void SetPerspective(float fovY, float aspect, float nearZ, float farZ)
+    {
+        m_fovY = fovY;
+        m_aspect = aspect;
+        m_nearZ = nearZ;
+        m_farZ = farZ;
+        m_dirtyProjection = true;
+    }
+    void LookAt(glm::vec3 eye, glm::vec3 center, glm::vec3 up)
+    {
+        m_pos = eye;
+        glm::vec3 dir = glm::normalize(center - eye);
+        m_pitch = glm::asin(dir.y);
+        m_yaw = glm::atan(dir.x, dir.z);
+        m_dirtyView = true;
+    }
+    void Translate(glm::vec3 delta)
+    {
+        m_pos += delta;
+        m_dirtyView = true;
+    }
+    void Rotate(float yaw, float pitch)
+    {
+        m_yaw += yaw;
+        m_pitch += pitch;
+        float limit = glm::half_pi<float>() * 0.99f;
+        m_pitch = glm::clamp(m_pitch, -limit, limit);
+
+        m_dirtyView = true;
+    }
+
+    const glm::mat4 &GetView() const
+    {
+        if (m_dirtyView)
+            RecalcView();
+        return m_view;
+    }
+    const glm::mat4 &GetProjection() const
+    {
+        if (m_dirtyProjection)
+            RecalcProjection();
+        return m_projection;
+    }
+
+    glm::vec3 Forward() const { return glm::normalize(glm::vec3(glm::inverse(GetView()) * glm::vec4(0, 0, -1, 0))); }
+    glm::vec3 Right() const { return glm::normalize(glm::vec3(glm::inverse(GetView()) * glm::vec4(1, 0, 0, 0))); }
+};

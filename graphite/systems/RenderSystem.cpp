@@ -8,7 +8,7 @@
 
 void RenderSystem::Init()
 {
-    assert(m_DeviceManager && m_AssetManager && m_Registry && m_Hwnd);
+    assert(m_DeviceManager && m_AssetManager && m_Registry && m_Hwnd && m_Camera);
     OutputDebugStringA("[RenderSystem] Initialized.\n");
 
     m_Renderer.Init(
@@ -18,10 +18,12 @@ void RenderSystem::Init()
         m_Height);
 }
 
-void RenderSystem::Update()
+void RenderSystem::Update(float /*dt*/)
 {
     /* OutputDebugStringA("[RenderSystem] Updated.");*/
-    m_Renderer.UpdatePerFrameConstants(m_ViewMatrix, m_ProjectionMatrix);
+    m_Renderer.UpdatePerFrameConstants(
+        m_Camera->GetView(),
+        m_Camera->GetProjection());
     m_Renderer.BeginFrame();
     m_Renderer.GeometryPass(*m_Registry, *m_AssetManager);
     m_Renderer.EndFrame();
