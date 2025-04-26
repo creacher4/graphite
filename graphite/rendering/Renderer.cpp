@@ -171,6 +171,9 @@ void Renderer::OnResize(UINT width, UINT height)
 
 void Renderer::BeginFrame()
 {
+    m_drawCallCount = 0;
+    m_triangleCount = 0;
+
     auto *context = m_DeviceManager->GetContext();
     m_GBuffer.Bind(context);
     m_GBuffer.Clear(context);
@@ -242,10 +245,14 @@ void Renderer::GeometryPass(ECSRegistry &registry, AssetManager &assets)
         // OutputDebugStringA("[GeometryPass] Attempting draw call...\n");
         context->DrawIndexed(mesh->indexCount, 0, 0);
         // OutputDebugStringA("[GeometryPass] Draw call complete.\n");
+
+        // ui stats
+        m_drawCallCount++;
+        m_triangleCount += mesh->indexCount / 3;
     }
 }
 
-void Renderer::EndFrame()
+void Renderer::EndFrame(StatsSystem *stats)
 {
     // rebind back buffer
     auto *context = m_DeviceManager->GetContext();
@@ -285,6 +292,10 @@ void Renderer::EndFrame()
         ImGui::Image(texID, ImGui::GetContentRegionAvail());
     }
     ImGui::End();
+
+    // STATS viewer
+    if (stats)
+        stats->DrawImGui();
 
     ImGui::Render();
     ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());

@@ -4,6 +4,7 @@
 #include "managers/DeviceManager.h"
 #include "managers/AssetManager.h"
 #include "ecs/ECSRegistry.h"
+#include "StatsSystem.h"
 #include <Windows.h>
 
 void RenderSystem::Init()
@@ -26,7 +27,7 @@ void RenderSystem::Update(float /*dt*/)
         m_Camera->GetProjection());
     m_Renderer.BeginFrame();
     m_Renderer.GeometryPass(*m_Registry, *m_AssetManager);
-    m_Renderer.EndFrame();
+    m_Renderer.EndFrame(m_stats);
 }
 
 void RenderSystem::OnResize(UINT width, UINT height)

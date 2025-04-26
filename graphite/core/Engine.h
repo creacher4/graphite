@@ -8,6 +8,7 @@
 #include "systems/ResizeSystem.h"
 #include "systems/CameraController.h"
 #include "rendering/Camera.h"
+#include "systems/StatsSystem.h"
 
 #include <memory>
 #include <Windows.h>
@@ -33,6 +34,7 @@ private:
     // systems
     RenderSystem m_RenderSystem;
     ResizeSystem m_ResizeSystem;
+    StatsSystem m_StatsSystem;
     CameraController m_cameraController;
 
     UINT m_Width;

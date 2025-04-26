@@ -43,6 +43,12 @@ void Engine::Init(HWND hwnd, UINT width, UINT height)
     m_RenderSystem.SetAssetManager(m_AssetManager.get());
     m_RenderSystem.SetRegistry(m_Registry.get());
     m_RenderSystem.SetCamera(m_Camera.get());
+
+    m_StatsSystem.SetRenderSystem(&m_RenderSystem);
+    m_StatsSystem.SetCamera(m_Camera.get());
+    m_SystemManager->RegisterSystem(&m_StatsSystem);
+
+    m_RenderSystem.SetStatsSystem(&m_StatsSystem);
     m_RenderSystem.SetWindowHandle(hwnd);
     m_RenderSystem.SetWindowSize(m_Width, m_Height);
     m_SystemManager->RegisterSystem(&m_RenderSystem);
