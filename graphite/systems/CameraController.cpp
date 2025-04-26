@@ -40,8 +40,8 @@ void CameraController::Update(float dt)
     {
         glm::vec3 move = glm::normalize(dir);
         glm::vec3 worldMove =
-            m_Camera->Right() * move.x +
-            m_Camera->Forward() * move.z; // no y component for now
+            m_Camera->GetRight() * move.x +
+            m_Camera->GetForward() * move.z; // no y component for now
 
         m_Camera->Translate(worldMove * m_moveSpeed * dt);
     }

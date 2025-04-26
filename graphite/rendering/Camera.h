@@ -16,22 +16,21 @@ class Camera
     float m_fovY, m_aspect, m_nearZ, m_farZ;
 
     mutable glm::mat4 m_view, m_projection;
+    mutable glm::vec3 m_forward, m_right, m_up;
     mutable bool m_dirtyView = true, m_dirtyProjection = true;
 
     // quarternions can legit piss off bro
     // i just want to use euler angles for now
     void RecalcView() const
     {
-        glm::vec3 forward{
+        m_forward = glm::normalize(glm::vec3{
             cos(m_pitch) * sin(m_yaw),
             sin(m_pitch),
-            cos(m_pitch) * cos(m_yaw)};
+            cos(m_pitch) * cos(m_yaw)});
+        m_right = glm::normalize(glm::cross(m_forward, glm::vec3(0, 1, 0)));
+        m_up = glm::cross(m_right, m_forward);
 
-        const glm::vec3 worldUp{0, 1, 0};
-        glm::vec3 right = glm::normalize(glm::cross(forward, worldUp));
-        glm::vec3 up = glm::cross(right, forward);
-
-        m_view = glm::lookAt(m_pos, m_pos + forward, up);
+        m_view = glm::lookAt(m_pos, m_pos + m_forward, m_up);
         m_dirtyView = false;
     }
     void RecalcProjection() const
@@ -85,6 +84,26 @@ public:
         return m_projection;
     }
 
-    glm::vec3 Forward() const { return glm::normalize(glm::vec3(glm::inverse(GetView()) * glm::vec4(0, 0, -1, 0))); }
-    glm::vec3 Right() const { return glm::normalize(glm::vec3(glm::inverse(GetView()) * glm::vec4(1, 0, 0, 0))); }
+    glm::vec3 GetForward() const
+    {
+        if (m_dirtyView)
+            RecalcView();
+        return m_forward;
+    }
+    glm::vec3 GetRight() const
+    {
+        if (m_dirtyView)
+            RecalcView();
+        return m_right;
+    }
+    glm::vec3 GetUp() const
+    {
+        if (m_dirtyView)
+            RecalcView();
+        return m_up;
+    }
+
+    float GetFovY() const { return m_fovY; }
+    float GetNearZ() const { return m_nearZ; }
+    float GetFarZ() const { return m_farZ; }
 };

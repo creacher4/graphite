@@ -23,7 +23,7 @@ public:
     void SetDeviceManager(DeviceManager *deviceManager);
     bool InitPrimitiveMeshes();
 
-    MeshResource *GetMesh(const std::string &id);
+    const MeshResource *GetMesh(const std::string &id);
 
     void Shutdown();
 
