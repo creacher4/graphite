@@ -52,7 +52,7 @@ bool AssetManager::InitPrimitiveMeshes()
     return true;
 }
 
-AssetManager::MeshResource *AssetManager::GetMesh(const std::string &id)
+const AssetManager::MeshResource *AssetManager::GetMesh(const std::string &id)
 {
     auto it = m_Meshes.find(id);
     return (it != m_Meshes.end()) ? &it->second : nullptr;

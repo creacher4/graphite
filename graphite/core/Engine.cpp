@@ -27,8 +27,6 @@ void Engine::Init(HWND hwnd, UINT width, UINT height)
     m_Registry = std::make_unique<ECSRegistry>();
 
     // register subsystems
-    m_SystemManager->RegisterSystem(&m_InputSystem);
-
     m_cameraController.SetCamera(m_Camera.get());
     m_SystemManager->RegisterSystem(&m_cameraController);
 
@@ -75,4 +73,13 @@ void Engine::Shutdown()
 void Engine::OnResize(int width, int height)
 {
     m_ResizeSystem.OnResize(width, height);
+
+    {
+        float aspect = float(width) / float(height);
+        m_Camera->SetPerspective(
+            m_Camera->GetFovY(), // fovY
+            aspect,
+            m_Camera->GetNearZ(), // nearZ
+            m_Camera->GetFarZ()); // farZ
+    }
 }

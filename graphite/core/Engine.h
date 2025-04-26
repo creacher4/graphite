@@ -4,7 +4,6 @@
 #include "core/SystemManager.h"
 #include "managers/DeviceManager.h"
 #include "managers/AssetManager.h"
-#include "systems/InputSystem.h"
 #include "systems/RenderSystem.h"
 #include "systems/ResizeSystem.h"
 #include "systems/CameraController.h"
@@ -32,7 +31,6 @@ private:
     std::unique_ptr<Camera> m_Camera;
 
     // systems
-    InputSystem m_InputSystem;
     RenderSystem m_RenderSystem;
     ResizeSystem m_ResizeSystem;
     CameraController m_cameraController;

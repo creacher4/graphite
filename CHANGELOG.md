@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.4.1] – 2025-04-26
+
+### Added
+
+- Camera:
+  - `GetFovY()`, `GetNearZ()`, and `GetFarZ()` accessors to expose the current projection parameters
+
+### Changed
+
+- Camera:
+  - Cached `forward`, `right`, and `up` vectors inside `RecalcView()` and added an `Up()` accessor
+    - `Forward()`, `Right()`, and `Up()` now return those cached vectors instead of recomputing via matrix inversion
+- AssetManager:
+  - `GetMesh(const std::string&)` now returns `const MeshResource*` to enforce read-only access to shared mesh data
+- Engine:
+  - `Engine::OnResize` updates the camera’s projection by re-calling `Camera::SetPerspective(…)` with the new aspect ratio, preventing view distortion on window resizes
+
+### Removed
+
+- Removed the `InputSystem` class and its registration in `Engine` — all raw input is now handled directly by `InputManager`
+
+---
+
 ## [0.4.0] – 2025-04-26
 
 ### Added
