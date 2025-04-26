@@ -12,11 +12,11 @@ void SystemManager::InitAll()
         sys->Init();
     }
 }
-void SystemManager::UpdateAll()
+void SystemManager::UpdateAll(float deltaTime)
 {
     for (auto sys : m_Systems)
     {
-        sys->Update(); // TODO: pass actual delta time
+        sys->Update(deltaTime);
     }
 }
 

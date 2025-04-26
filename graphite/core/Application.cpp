@@ -1,4 +1,5 @@
 #include "Application.h"
+#include <chrono>
 
 Application::Application(HINSTANCE hInstance)
 {
@@ -15,13 +16,36 @@ Application::Application(HINSTANCE hInstance)
 
 void Application::Run()
 {
-    while (m_Window->ProcessMessages())
-    {
-        auto view = m_Engine->GetViewMatrix();
-        auto proj = m_Engine->GetProjectionMatrix();
-        m_Engine->GetRenderSystem().SetViewProjection(view, proj);
+    // using clock = std::chrono::high_resolution_clock;
+    // auto last = clock::now();
 
-        m_Engine->Update();
+    // while (m_Window->ProcessMessages())
+    // {
+    //     auto now = clock::now();
+    //     float dt = std::chrono::duration<float>(now - last).count();
+    //     last = now;
+
+    //     m_Engine->Update(dt);
+    // }
+
+    LARGE_INTEGER freq, prev, now;
+    QueryPerformanceFrequency(&freq);
+    QueryPerformanceCounter(&prev);
+
+    while (true)
+    {
+        InputManager::Get().NewFrame();
+
+        if (!m_Window->ProcessMessages())
+            break;
+
+        // compute dt
+        QueryPerformanceCounter(&now);
+        float dt = float(now.QuadPart - prev.QuadPart) / float(freq.QuadPart);
+        prev = now;
+
+        // update engine
+        m_Engine->Update(dt);
     }
 
     m_Engine->Shutdown();

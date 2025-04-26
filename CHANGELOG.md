@@ -7,11 +7,46 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
-## [Unreleased]
+## [0.4.0] – 2025-04-26
+
+### Added
+
+- Input System:
+  - New `InputManager` singleton capturing raw Win32 events (`WM_KEYDOWN`, `WM_KEYUP`, `WM_MOUSEMOVE`) and exposing:
+    - `NewFrame()` to roll input state each frame
+    - `IsDown(vk)` and `WasPressed(vk)` for key queries
+    - `GetMouseDelta()` for relative mouse movement
+  - `InputSystem` now calls `InputManager::Get().NewFrame()` in its `Update(float dt)`.
+- Camera & Controller:
+  - New `Camera` class with:
+    - Separate yaw & pitch Euler angles (clamped to ±89°) to eliminate roll
+    - `LookAt()`, `Translate()` and `Rotate(yaw, pitch)` methods
+    - Lazy-recalc of view & projection matrices
+  - New `CameraController` system deriving from `ISystem`:
+    - RMB-held mouse look (yaw/pitch) via `Camera::Rotate`
+    - WASD movement in camera–local forward/right directions (`Camera::Forward()`, `Camera::Right()`)
+    - Integrated ImGui capture checks to avoid conflicts
+- System Framework:
+  - Changed `ISystem::Update()` to `Update(float deltaTime)`
+  - `SystemManager::UpdateAll(float deltaTime)` now propagates delta time to each system
+  - `Application`/`Engine` now compute per-frame `deltaTime` (e.g. via `std::chrono`) and call `UpdateAll(deltaTime)`
+- Engine Integration:
+  - Injected `Camera` into `CameraController` and `RenderSystem`
+  - `RenderSystem::Update(float dt)` now fetches view/projection from the active `Camera` instead of static matrices
+
+### Changed
+
+- Removed unintended roll behavior in camera look; pitch no longer rolls the camera sideways
+- Flipped forward/back mapping so `'W'` moves forward and `'S'` moves backward relative to camera orientation
+
+### Fixed
+
+- Clamped camera pitch to ±89° and used euler angles instead of quaternions to prevent roll when looking up/down
+- Ensured ImGui input capture flags block camera movement while interacting with UI
 
 ---
 
-## [v0.3.0] – 2025-04-25
+## [0.3.0] – 2025-04-25
 
 ### Added
 

@@ -1,4 +1,5 @@
 #include "PlatformWindow.h"
+#include "input/InputManager.h"
 #include <stdexcept>
 #include <imgui_impl_win32.h>
 
@@ -6,6 +7,10 @@ extern LRESULT ImGui_ImplWin32_WndProcHandler(HWND hwnd, UINT msg, WPARAM wParam
 
 LRESULT CALLBACK PlatformWindow::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
+    // handle input messages first
+    InputManager::Get().HandleWin32Message(msg, wParam, lParam);
+
+    // handle ImGui messages next
     if (ImGui_ImplWin32_WndProcHandler(hwnd, msg, wParam, lParam))
         return true;
 
