@@ -27,6 +27,9 @@ public:
     int GetDrawCallCount() const { return m_drawCallCount; }
     int GetTriangleCount() const { return m_triangleCount; }
 
+    void EnableWireframeNoCull(bool enable) { m_useWire_NoCull = enable; }
+    bool IsWireframeNoCullEnabled() const { return m_useWire_NoCull; }
+
 private:
     GBuffer m_GBuffer;
 
@@ -34,7 +37,14 @@ private:
 
     // rasterizer state
     Microsoft::WRL::ComPtr<ID3D11RasterizerState> m_rasterizerStateDefault;
+    Microsoft::WRL::ComPtr<ID3D11RasterizerState> m_rasterizerStateWire_NoCull;
+
+    bool m_useWire_NoCull = false;
+
+    // depth stencil state
     Microsoft::WRL::ComPtr<ID3D11DepthStencilState> m_depthStencilStateDefault;
+
+    // sampler sate
     Microsoft::WRL::ComPtr<ID3D11SamplerState> m_samplerStateDefault;
 
     // shader objects
