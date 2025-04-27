@@ -40,6 +40,18 @@ void Renderer::Init(DeviceManager *deviceManager, HWND hwnd, UINT width, UINT he
         throw std::runtime_error("Failed to create rasterizer state.");
     }
 
+    // wireframe state
+    D3D11_RASTERIZER_DESC wfDesc = rasterDesc;
+    wfDesc.FillMode = D3D11_FILL_WIREFRAME;
+    wfDesc.CullMode = D3D11_CULL_NONE;
+    hr = device->CreateRasterizerState(
+        &wfDesc,
+        m_rasterizerStateWire_NoCull.GetAddressOf());
+    if (FAILED(hr))
+    {
+        throw std::runtime_error("Failed to create wireframe rasterizer state.");
+    }
+
     // depth stencil state
     D3D11_DEPTH_STENCIL_DESC depthDesc = {};
     depthDesc.DepthEnable = TRUE;
@@ -197,7 +209,14 @@ void Renderer::GeometryPass(ECSRegistry &registry, AssetManager &assets)
 {
     auto *context = m_DeviceManager->GetContext();
 
-    context->RSSetState(m_rasterizerStateDefault.Get());
+    if (m_useWire_NoCull)
+    {
+        context->RSSetState(m_rasterizerStateWire_NoCull.Get());
+    }
+    else
+    {
+        context->RSSetState(m_rasterizerStateDefault.Get());
+    }
     context->OMSetDepthStencilState(m_depthStencilStateDefault.Get(), 1);
 
     // bind pipeline state

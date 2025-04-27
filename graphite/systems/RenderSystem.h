@@ -34,6 +34,9 @@ public:
     int GetDrawCallCount() const { return m_Renderer.GetDrawCallCount(); }
     int GetTriangleCount() const { return m_Renderer.GetTriangleCount(); }
 
+    void EnableWireframeNoCull(bool e) { m_Renderer.EnableWireframeNoCull(e); }
+    bool IsWireframeNoCullEnabled() const { return m_Renderer.IsWireframeNoCullEnabled(); }
+
 private:
     DeviceManager *m_DeviceManager = nullptr;
     AssetManager *m_AssetManager = nullptr;
