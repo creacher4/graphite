@@ -35,6 +35,7 @@ private:
     // rasterizer state
     Microsoft::WRL::ComPtr<ID3D11RasterizerState> m_rasterizerStateDefault;
     Microsoft::WRL::ComPtr<ID3D11DepthStencilState> m_depthStencilStateDefault;
+    Microsoft::WRL::ComPtr<ID3D11SamplerState> m_samplerStateDefault;
 
     // shader objects
     Microsoft::WRL::ComPtr<ID3D11VertexShader> m_vsGeometry;

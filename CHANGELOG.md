@@ -5,6 +5,40 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),  
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.5.0] – 2025-04-27
+
+### Added
+
+- Assimp-based model loader:
+  - `AssetManager::LoadModel()` will now read `.gltf`/`.fbx`/`.blend` via Assimp
+  - Automatically builds vertex/index buffers from the first mesh in the scene
+- Texture pipeline:
+  - `AssetManager::LoadTexture()` uses `stb_image` to load PNG/JPEG and creates immutable D3D11 textures + SRVs
+- Material system:
+  - New `Material` struct (albedo, normal, ORM IDs and fallback factors)
+  - `AssetManager::AddMaterial()` / `GetMaterial()` to register and retrieve materials
+- `RenderableComponent` & ECS integration:
+  - Replace primitive cube with `RenderableComponent{ meshID, materialID }`
+  - Engine now loads a model, its textures, creates a `Material` and spawns an entity accordingly
+- Deferred renderer updates:
+  - Expanded `Vertex` and input layout to include a `TANGENT` element
+  - VS computes world-space tangents & bitangents, PS samples normal map and remaps into world-space normals
+  - Bound material SRVs and sampler inside `GeometryPass()`
+- ImGui G-Buffer viewer enhancements:
+  - Added a fourth radio-button `Depth` to inspect the raw depth SRV
+
+### Changed
+
+- Renamed `MeshComponent` to `RenderableComponent`, removed primitive-only path
+- Kept `InitPrimitiveMeshes()` as a fallback cube loader but primary mesh loading uses Assimp
+- CMakeLists now pulls in Assimp and `stb_image.h`
+- Updated default rasterizer state to `D3D11_CULL_BACK` (back-face culling)
+
+### Fixed
+
+- Pixel shader now correctly generates and binds tangents/bitangents so normal maps render properly in the G-Buffer
+- Fixed wrong winding order in imported meshes
+
 ## [0.4.2] – 2025-04-27
 
 ### Added
@@ -33,8 +67,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 - Stats window remained updateless — now the system is registered and its `DrawImGui()` is invoked each frame
 
----
-
 ## [0.4.1] – 2025-04-26
 
 ### Added
@@ -55,8 +87,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ### Removed
 
 - Removed the `InputSystem` class and its registration in `Engine` — all raw input is now handled directly by `InputManager`
-
----
 
 ## [0.4.0] – 2025-04-26
 
@@ -94,8 +124,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 - Clamped camera pitch to ±89° and used euler angles instead of quaternions to prevent roll when looking up/down
 - Ensured ImGui input capture flags block camera movement while interacting with UI
-
----
 
 ## [0.3.0] – 2025-04-25
 
@@ -145,8 +173,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ### Fixed
 
 - Fixed issue where the back-buffer wasn't being cleared properly (in `Renderer::EndFrame()`), causing ghosting/artifacts on the window
-
----
 
 ## [0.2.0] – 2025-04-25
 
@@ -209,8 +235,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Fixed crash caused by attempting to use uninitialized GBuffer render target views (`nullptr`) during `ClearRenderTargetView` calls.
 - Fixed `TransformComponent` GLM include issue.
 - Fixed ECS loop iteration error caused by incorrect use of `entt::view` in range-based for loop.
-
----
 
 ## [0.1.0] – 2025-04-23
 

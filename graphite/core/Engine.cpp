@@ -1,6 +1,7 @@
 #include "Engine.h"
 #include "ecs/TransformComponent.h"
-#include "ecs/MeshComponent.h"
+#include "ecs/RenderableComponent.h"
+#include "rendering/Material.h"
 #include <string>
 #include <sstream>
 #include <glm/gtc/matrix_transform.hpp>
@@ -34,10 +35,10 @@ void Engine::Init(HWND hwnd, UINT width, UINT height)
     m_DeviceManager->InitDevice(hwnd, width, height);
     m_AssetManager = std::make_unique<AssetManager>();
     m_AssetManager->SetDeviceManager(m_DeviceManager.get());
-    if (!m_AssetManager->InitPrimitiveMeshes())
-    {
-        throw std::runtime_error("AssetManager failed to init primitives");
-    }
+    // if (!m_AssetManager->InitPrimitiveMeshes())
+    // {
+    //     throw std::runtime_error("AssetManager failed to init primitives");
+    // }
 
     m_RenderSystem.SetDeviceManager(m_DeviceManager.get());
     m_RenderSystem.SetAssetManager(m_AssetManager.get());
@@ -59,9 +60,74 @@ void Engine::Init(HWND hwnd, UINT width, UINT height)
     m_SystemManager->InitAll();
 
     // create test entity
-    auto entity = m_Registry->CreateEntity();
-    m_Registry->AddComponent<TransformComponent>(entity); // default transform
-    m_Registry->AddComponent<MeshComponent>(entity, MeshComponent{"Cube"});
+    // auto entity = m_Registry->CreateEntity();
+    // m_Registry->AddComponent<TransformComponent>(entity); // default transform
+    // m_Registry->AddComponent<RenderableComponent>(entity, RenderableComponent{"Cube"});
+    OutputDebugStringA("[Engine] Loading scene assets...\n");
+    try
+    {
+        AssetID modelPath = "assets/models/boulder/boulder_01_8k.gltf";
+        AssetID materialID = "assets/models/boulder/boulder_01_8k";
+
+        // texture paths
+        AssetID albedoPath = "assets/models/boulder/boulder_01_albedo.png";
+        AssetID normalPath = "assets/models/boulder/boulder_01_normals.png";
+        AssetID ormPath = "assets/models/boulder/boulder_01_orm.png";
+
+        // load model
+        if (!m_AssetManager->LoadModel(modelPath))
+        {
+            throw std::runtime_error("Failed to load model.");
+        }
+        else
+        {
+            OutputDebugStringA("[Engine] Model loaded successfully.\n");
+        }
+
+        // load textures
+        if (!m_AssetManager->LoadTexture(albedoPath))
+        {
+            throw std::runtime_error("Failed to load albedo texture.");
+        }
+        if (!m_AssetManager->LoadTexture(normalPath))
+        {
+            throw std::runtime_error("Failed to load normal texture.");
+        }
+        if (!m_AssetManager->LoadTexture(ormPath))
+        {
+            throw std::runtime_error("Failed to load ORM texture.");
+        }
+
+        // create material
+        Material catMaterial;
+        catMaterial.albedo = albedoPath;
+        catMaterial.normal = normalPath;
+        catMaterial.orm = ormPath;
+
+        if (!m_AssetManager->AddMaterial(materialID, catMaterial))
+        {
+            throw std::runtime_error("Failed to add material.");
+        }
+
+        // create entity
+        auto entity = m_Registry->CreateEntity();
+
+        TransformComponent transform;
+        transform.position = glm::vec3(0, 0, 0);
+        transform.scale = glm::vec3(1.0f, 1.0f, 1.0f);
+        m_Registry->AddComponent<TransformComponent>(entity, transform);
+
+        // add renderable component
+        m_Registry->AddComponent<RenderableComponent>(entity, RenderableComponent{modelPath, materialID});
+    }
+    catch (const std::exception &e)
+    {
+        std::string errorMsg = "[Engine] EXCEPTION during asset loading/entity creation: ";
+        errorMsg += e.what();
+        errorMsg += "\n";
+        OutputDebugStringA(errorMsg.c_str());
+        throw;
+    }
 }
 
 void Engine::Update(float deltaTime)

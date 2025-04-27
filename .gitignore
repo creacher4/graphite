@@ -22,3 +22,6 @@ Makefile
 
 # whatever
 imgui.ini
+
+# assets folder bcus i cant commit all that to the repo
+assets/

@@ -3,7 +3,7 @@
 #include "ShaderUtils.h"
 #include <stdexcept>
 #include "ecs/TransformComponent.h"
-#include "ecs/MeshComponent.h"
+#include "ecs/RenderableComponent.h"
 #include "Vertex.h"
 #include "ConstantBuffers.h"
 #include <glm/gtc/matrix_transform.hpp>
@@ -29,7 +29,7 @@ void Renderer::Init(DeviceManager *deviceManager, HWND hwnd, UINT width, UINT he
     // rasterizer state
     D3D11_RASTERIZER_DESC rasterDesc = {};
     rasterDesc.FillMode = D3D11_FILL_SOLID;
-    rasterDesc.CullMode = D3D11_CULL_NONE;
+    rasterDesc.CullMode = D3D11_CULL_BACK;
     rasterDesc.FrontCounterClockwise = FALSE;
     rasterDesc.DepthClipEnable = TRUE;
     hr = device->CreateRasterizerState(
@@ -51,6 +51,20 @@ void Renderer::Init(DeviceManager *deviceManager, HWND hwnd, UINT width, UINT he
     if (FAILED(hr))
     {
         throw std::runtime_error("Failed to create depth stencil state.");
+    }
+
+    // sampler state
+    D3D11_SAMPLER_DESC samplerDesc = {};
+    samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+    samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+    samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+    samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+    device->CreateSamplerState(
+        &samplerDesc,
+        m_samplerStateDefault.GetAddressOf());
+    if (FAILED(hr))
+    {
+        throw std::runtime_error("Failed to create sampler state.");
     }
 
     if (!m_GBuffer.Init(device, width, height))
@@ -106,7 +120,7 @@ void Renderer::Init(DeviceManager *deviceManager, HWND hwnd, UINT width, UINT he
             {"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0},
             {"NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0},
             {"TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 24, D3D11_INPUT_PER_VERTEX_DATA, 0},
-        };
+            {"TANGENT", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 32, D3D11_INPUT_PER_VERTEX_DATA, 0}};
         hr = device->CreateInputLayout(
             layoutDesc, ARRAYSIZE(layoutDesc),
             vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(),
@@ -197,7 +211,7 @@ void Renderer::GeometryPass(ECSRegistry &registry, AssetManager &assets)
     context->VSSetConstantBuffers(1, 1, m_cbPerObject.GetAddressOf());
 
     // loop through entities and draw
-    auto view = registry.View<TransformComponent, MeshComponent>();
+    auto view = registry.View<TransformComponent, RenderableComponent>();
     // OutputDebugStringA("[GeometryPass] Checking for entities to draw...\n");
     for (auto [ent, transform, meshComp] : view.each())
     {
@@ -222,10 +236,11 @@ void Renderer::GeometryPass(ECSRegistry &registry, AssetManager &assets)
         // OutputDebugStringA("[GeometryPass] Found Entity. PrimitiveID:\n");
         // OutputDebugStringA(meshComp.primitiveID.c_str());
         // OutputDebugStringA("\n");
-        auto *mesh = assets.GetMesh(meshComp.primitiveID);
-        if (!mesh)
+        auto *mesh = assets.GetMesh(meshComp.meshID);
+        auto *material = assets.GetMaterial(meshComp.materialID);
+        if (!mesh || !material)
         {
-            OutputDebugStringA("[GeometryPass][ERROR] Mesh not found!\n");
+            OutputDebugStringA("[GeometryPass][ERROR] Mesh or material not found!\n");
             continue;
         }
         if (!mesh->vertexBuffer || !mesh->indexBuffer || mesh->indexCount == 0)
@@ -234,6 +249,17 @@ void Renderer::GeometryPass(ECSRegistry &registry, AssetManager &assets)
             continue;
         }
         // OutputDebugStringA("[GeometryPass] Found mesh.\n");
+
+        // bind textures
+        ID3D11ShaderResourceView *srvs[3] = {nullptr, nullptr, nullptr};
+        if (auto *t = assets.GetTexture(material->albedo))
+            srvs[0] = t->srv.Get();
+        if (auto *t = assets.GetTexture(material->normal))
+            srvs[1] = t->srv.Get();
+        if (auto *t = assets.GetTexture(material->orm))
+            srvs[2] = t->srv.Get();
+        context->PSSetShaderResources(0, 3, srvs);
+        context->PSSetSamplers(0, 1, m_samplerStateDefault.GetAddressOf());
 
         // bind vertex/index buffers
         UINT stride = sizeof(Vertex), offset = 0;
@@ -249,6 +275,10 @@ void Renderer::GeometryPass(ECSRegistry &registry, AssetManager &assets)
         // ui stats
         m_drawCallCount++;
         m_triangleCount += mesh->indexCount / 3;
+
+        // unbind textures
+        ID3D11ShaderResourceView *nulls[3] = {nullptr, nullptr, nullptr};
+        context->PSSetShaderResources(0, 3, nulls);
     }
 }
 
@@ -277,14 +307,28 @@ void Renderer::EndFrame(StatsSystem *stats)
     ImGui::RadioButton("Normal", &channel, 1);
     ImGui::SameLine();
     ImGui::RadioButton("ORM", &channel, 2);
+    ImGui::SameLine();
+    ImGui::RadioButton("Depth", &channel, 3);
 
     ID3D11ShaderResourceView *srv = nullptr;
-    if (channel == 0)
+    switch (channel)
+    {
+    case 0:
         srv = m_GBuffer.GetAlbedoSRV();
-    else if (channel == 1)
+        break;
+    case 1:
         srv = m_GBuffer.GetNormalSRV();
-    else if (channel == 2)
+        break;
+    case 2:
         srv = m_GBuffer.GetOrmSRV();
+        break;
+    case 3:
+        srv = m_GBuffer.GetDepthSRV();
+        break;
+    default:
+        srv = m_GBuffer.GetAlbedoSRV();
+        break;
+    }
 
     if (srv)
     {
