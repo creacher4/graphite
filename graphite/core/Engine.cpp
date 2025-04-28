@@ -11,17 +11,7 @@ void Engine::Init(HWND hwnd, UINT width, UINT height)
     m_Width = width;
     m_Height = height;
 
-    // set up temp camera
-    m_Camera = std::make_unique<Camera>();
-    m_Camera->LookAt(
-        glm::vec3(0, 0, -3), // eye
-        glm::vec3(0, 0, 0),  // center
-        glm::vec3(0, 1, 0)); // up
-    m_Camera->SetPerspective(
-        glm::radians(45.0f),                // fovY
-        static_cast<float>(width) / height, // aspect
-        0.1f,                               // nearZ
-        100.0f);                            // farZ
+    SetupCamera(width, height);
 
     // initialize systems
     m_SystemManager = std::make_unique<SystemManager>();
@@ -154,4 +144,18 @@ void Engine::OnResize(int width, int height)
             m_Camera->GetNearZ(), // nearZ
             m_Camera->GetFarZ()); // farZ
     }
+}
+
+void Engine::SetupCamera(UINT width, UINT height)
+{
+    m_Camera = std::make_unique<Camera>();
+    m_Camera->LookAt(
+        glm::vec3(0, 0, -3), // eye
+        glm::vec3(0, 0, 0),  // center
+        glm::vec3(0, 1, 0)); // up
+    m_Camera->SetPerspective(
+        glm::radians(45.0f),                    // fovY
+        static_cast<float>(m_Width) / m_Height, // aspect
+        0.1f,                                   // nearZ
+        100.0f);                                // farZ
 }

@@ -5,12 +5,15 @@
 #include "ecs/ECSRegistry.h"
 #include "managers/AssetManager.h"
 #include "systems/StatsSystem.h"
+#include "ecs/TransformComponent.h"
 #include <Windows.h>
 #include <d3d11.h>
 #include <wrl/client.h>
 #include <glm/glm.hpp>
 
 class DeviceManager;
+struct Material;
+struct Mesh;
 
 class Renderer
 {
@@ -32,7 +35,6 @@ public:
 
 private:
     GBuffer m_GBuffer;
-
     DeviceManager *m_DeviceManager = nullptr;
 
     // rasterizer state
@@ -59,4 +61,19 @@ private:
     // bla bla
     int m_drawCallCount = 0;
     int m_triangleCount = 0;
+
+    // helpers
+
+    // initialization functions
+    void InitStateObjects(ID3D11Device *device);
+    void InitImGui(HWND hwnd, ID3D11Device *device, ID3D11DeviceContext *context);
+    void InitShadersAndLayout(ID3D11Device *device);
+    void InitConstantBuffers(ID3D11Device *device);
+
+    // geometry pass functions
+    void SetPassState(ID3D11DeviceContext *context);
+    void UpdatePerObjectConstantBuffer(ID3D11DeviceContext *context, const TransformComponent &transform);
+    void BindMaterial(ID3D11DeviceContext *context, AssetManager &assets, const Material *material);
+    void UnbindMaterial(ID3D11DeviceContext *context);
+    void DrawMesh(ID3D11DeviceContext *context, const AssetManager::MeshResource *mesh);
 };

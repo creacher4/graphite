@@ -5,15 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),  
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [0.5.0.2] – 2025-04-28
 
 ### Added
 
 - No-cull wireframe rasterizer state, toggleable via the stats ImGui window
+- `Engine::SetupCamera()` helper method to encapsulate camera creation and projection setup
 
 ### Changed
 
-- Normalized camera yaw in the Engine Stats debug UI so it now wraps between 0° and 360° instead of growing unbounded.
+- Normalized camera yaw in the Engine Stats UI to wrap 0°–360° instead of growing unbounded
+- `Renderer::Init` refactored into private helpers (`InitStateObjects`, `InitImGui`, `InitShadersAndLayout`, `InitConstantBuffers`) with no functional changes
+- `Renderer::GeometryPass` split into private helpers (`SetPassState`, `UpdatePerObjectConstantBuffer`, `BindMaterial`, `DrawMesh`, `UnbindMaterial`) to improve readability
 
 ## [0.5.0] – 2025-04-27
 
