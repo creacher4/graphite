@@ -1,6 +1,7 @@
 #include "StatsSystem.h"
 #include <imgui.h>
 #include <Windows.h>
+#include <cmath>
 
 #include "systems/RenderSystem.h"
 #include "rendering/Camera.h"
@@ -23,7 +24,13 @@ void StatsSystem::Update(float dt)
 
     m_camPos = m_camera->GetPosition();
     auto yawp = m_camera->GetYawPitch();
-    m_camYaw = yawp.x;
+
+    float rawYaw = yawp.x;
+    float wrappedYaw = std::fmod(rawYaw, glm::two_pi<float>());
+    if (wrappedYaw < 0.f)
+        wrappedYaw += glm::two_pi<float>();
+
+    m_camYaw = wrappedYaw;
     m_camPitch = yawp.y;
 
     if (GetAsyncKeyState(VK_F1) & 1)
