@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 - No-cull wireframe rasterizer state, toggleable via the stats ImGui window
 
+### Changed
+
+- Normalized camera yaw in the Engine Stats debug UI so it now wraps between 0° and 360° instead of growing unbounded.
+
 ## [0.5.0] – 2025-04-27
 
 ### Added
