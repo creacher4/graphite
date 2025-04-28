@@ -39,4 +39,8 @@ private:
 
     UINT m_Width;
     UINT m_Height;
+
+    // helpers
+    void SetupCamera(UINT width, UINT height);
+    // void RegisterSystems(HWND hwnd);
 };
