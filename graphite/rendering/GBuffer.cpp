@@ -1,5 +1,6 @@
 #include "rendering/GBuffer.h"
 #include <stdexcept>
+#include "utils/Logger.h"
 
 void GBuffer::Release()
 {
@@ -39,7 +40,10 @@ bool GBuffer::Init(ID3D11Device *device, UINT width, UINT height)
     device->CreateTexture2D(&desc, nullptr, m_texAlbedo.GetAddressOf());
     hr = device->CreateRenderTargetView(m_texAlbedo.Get(), nullptr, m_rtvAlbedo.GetAddressOf());
     if (FAILED(hr))
+    {
+        LOG_ERROR("Failed to create albedo render target view");
         return false;
+    }
     device->CreateShaderResourceView(m_texAlbedo.Get(), nullptr, m_srvAlbedo.GetAddressOf());
 
     // normal (RGBA16F)
@@ -47,7 +51,10 @@ bool GBuffer::Init(ID3D11Device *device, UINT width, UINT height)
     device->CreateTexture2D(&desc, nullptr, m_texNormal.GetAddressOf());
     hr = device->CreateRenderTargetView(m_texNormal.Get(), nullptr, m_rtvNormal.GetAddressOf());
     if (FAILED(hr))
+    {
+        LOG_ERROR("Failed to create normal render target view");
         return false;
+    }
     device->CreateShaderResourceView(m_texNormal.Get(), nullptr, m_srvNormal.GetAddressOf());
 
     // ORM (RGBA8)
@@ -55,7 +62,10 @@ bool GBuffer::Init(ID3D11Device *device, UINT width, UINT height)
     device->CreateTexture2D(&desc, nullptr, m_texORM.GetAddressOf());
     hr = device->CreateRenderTargetView(m_texORM.Get(), nullptr, m_rtvORM.GetAddressOf());
     if (FAILED(hr))
+    {
+        LOG_ERROR("Failed to create ORM render target view");
         return false;
+    }
     device->CreateShaderResourceView(m_texORM.Get(), nullptr, m_srvORM.GetAddressOf());
 
     // depth (typeless for SRV)

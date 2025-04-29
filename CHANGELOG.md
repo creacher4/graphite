@@ -11,19 +11,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 - Modular engine setup helpers: `InitCamera`, `InitSystems` and `InitScene`
 - Refactored `AssetManager` to separate mesh processing and texture loading into focused internal helpers for better code clarity and reuse
+- Centralized logging system using a new `Logger` class backed by spdlog
+- Configurable log file output, custom formatting and leveled logging via a `LogLevel` enum
+- `LOG_*` macros for structured logging across the engine
 
 ### Changed
 
 - `Engine::Init` now delegates responsibilities to dedicated helpers for initialization tasks
 - `Application::Run()` now returns `int` exit code instead of `void`
 - Replaced internal assert checks with explicit runtime exceptions for more controlled error handling
+- Most `OutputDebugStringA` calls replaced with structured log messages
+- Engine subsystems now emit consistent, leveled log messages
+
+### Fixed
+
+- Renamed `ERROR` log level to `ERR` to avoid conflict with Windows macros
 
 ## [0.5.0.2] – 2025-04-28
 
 ### Added
 
-- Toggleable no-cull wireframe mode via the Engine Stats window.
-- `SetupCamera` helper for centralized camera creation and projection setup.
+- Toggleable no-cull wireframe mode via the Engine Stats window
+- `SetupCamera` helper for centralized camera creation and projection setup
 
 ### Changed
 
@@ -60,7 +69,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Changed
 
-- Updated `Renderer` and `RenderSystem` to integrate with `StatsSystem`.
+- Updated `Renderer` and `RenderSystem` to integrate with `StatsSystem`
 
 ### Fixed
 
@@ -140,13 +149,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Changed
 
-- Overhauled `Renderer` to fully manage the deferred pipeline.
-- Restructured engine frame lifecycle around new rendering stages.
+- Overhauled `Renderer` to fully manage the deferred pipeline
+- Restructured engine frame lifecycle around new rendering stages
 
 ### Fixed
 
-- Corrected matrix multiplication order in shaders.
-- Prevented crashes from uninitialized GBuffer targets.
+- Corrected matrix multiplication order in shaders
+- Prevented crashes from uninitialized GBuffer targets
 
 ## [0.1.0] – 2025-04-23
 

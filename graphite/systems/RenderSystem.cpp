@@ -1,5 +1,6 @@
 #include "RenderSystem.h"
 #include <cassert>
+#include "utils/Logger.h"
 
 #include "managers/DeviceManager.h"
 #include "managers/AssetManager.h"
@@ -9,10 +10,14 @@
 
 void RenderSystem::Init()
 {
+    LOG_INFO("Initializing render system...");
     if (!m_DeviceManager || !m_AssetManager || !m_Registry || !m_Hwnd || !m_Camera)
-        throw std::runtime_error("RenderSystem::Init precondition failed: one or more dependencies are null");
+    {
+        LOG_ERROR("Render system not initialized. Missing dependencies");
+        return;
+    }
 
-    OutputDebugStringA("[RenderSystem] Initialized.\n");
+    LOG_INFO("Render system initialized");
 
     m_Renderer.Init(
         m_DeviceManager,
@@ -23,7 +28,6 @@ void RenderSystem::Init()
 
 void RenderSystem::Update(float /*dt*/)
 {
-    /* OutputDebugStringA("[RenderSystem] Updated.");*/
     m_Renderer.UpdatePerFrameConstants(
         m_Camera->GetView(),
         m_Camera->GetProjection());
@@ -34,11 +38,9 @@ void RenderSystem::Update(float /*dt*/)
 
 void RenderSystem::OnResize(UINT width, UINT height)
 {
-    OutputDebugStringA("[RenderSystem] OnResize\n");
     m_Renderer.OnResize(width, height);
 }
 
 void RenderSystem::Shutdown()
 {
-    OutputDebugStringA("[RenderSystem] Shutdown.\n");
 }

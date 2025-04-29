@@ -1,4 +1,5 @@
 #include "DeviceManager.h"
+#include "utils/Logger.h"
 
 void DeviceManager::InitDevice(HWND hwnd, UINT width, UINT height)
 {
@@ -35,19 +36,22 @@ void DeviceManager::InitDevice(HWND hwnd, UINT width, UINT height)
         m_Context.GetAddressOf());
     if (FAILED(hr))
     {
-        throw std::runtime_error("DeviceManager::InitDevice failed");
+        LOG_CRITICAL("Failed to create D3D11 device and swap chain. HRESULT: {}", hr);
     }
+    LOG_INFO("Created D3D11 device and swap chain");
 
     // create back buffer render target view
     Microsoft::WRL::ComPtr<ID3D11Texture2D> backBuffer;
     hr = m_SwapChain->GetBuffer(0, IID_PPV_ARGS(backBuffer.GetAddressOf()));
     if (FAILED(hr))
-        throw std::runtime_error("DeviceManager::GetBuffer failed");
+        LOG_ERROR("Failed to get back buffer. HRESULT: {}", hr);
+    LOG_INFO("Got back buffer");
     hr = m_Device->CreateRenderTargetView(backBuffer.Get(), nullptr, m_BackBufferRTV.GetAddressOf());
     if (FAILED(hr))
-        throw std::runtime_error("DeviceManager::CreateRTV failed");
+        LOG_ERROR("Failed to create render target view. HRESULT: {}", hr);
+    LOG_INFO("Created render target view");
 
-    OutputDebugStringA("DeviceManager::InitDevice succeeded\n");
+    LOG_INFO("D3D11 device initialization completed");
 }
 
 void DeviceManager::ResizeSwapChain(UINT width, UINT height)
@@ -55,17 +59,17 @@ void DeviceManager::ResizeSwapChain(UINT width, UINT height)
     m_BackBufferRTV.Reset();
     HRESULT hr = m_SwapChain->ResizeBuffers(1, width, height, DXGI_FORMAT_R8G8B8A8_UNORM, 0);
     if (FAILED(hr))
-        throw std::runtime_error("DeviceManager::ResizeBuffers failed");
+        LOG_ERROR("Failed to resize swap chain. HRESULT: {}", hr);
 
     Microsoft::WRL::ComPtr<ID3D11Texture2D> backBuffer;
     hr = m_SwapChain->GetBuffer(0, IID_PPV_ARGS(backBuffer.GetAddressOf()));
     if (FAILED(hr))
-        throw std::runtime_error("DeviceManager::GetBuffer after resize failed");
+        LOG_ERROR("Failed to get back buffer after resize. HRESULT: {}", hr);
     hr = m_Device->CreateRenderTargetView(backBuffer.Get(), nullptr, m_BackBufferRTV.GetAddressOf());
     if (FAILED(hr))
-        throw std::runtime_error("DeviceManager::CreateRTV after resize failed");
+        LOG_ERROR("Failed to create render target view after resize. HRESULT: {}", hr);
 
-    OutputDebugStringA("DeviceManager::ResizeSwapChain succeeded\n");
+    LOG_INFO("Resized swap chain and created new render target view");
 }
 
 void DeviceManager::Shutdown()
@@ -74,5 +78,5 @@ void DeviceManager::Shutdown()
     m_SwapChain.Reset();
     m_Context.Reset();
     m_Device.Reset();
-    OutputDebugStringA("DeviceManager::Shutdown completed\n");
+    LOG_INFO("D3D11 device and swap chain shutdown completed");
 }

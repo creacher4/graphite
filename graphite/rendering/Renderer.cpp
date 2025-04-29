@@ -6,6 +6,7 @@
 #include "Material.h"
 #include "Mesh.h"
 #include "Vertex.h"
+#include "Logger.h"
 #include "ConstantBuffers.h"
 #include <glm/gtc/matrix_transform.hpp>
 #include <imgui.h>
@@ -34,8 +35,9 @@ void Renderer::InitStateObjects(ID3D11Device *device)
         m_rasterizerStateDefault.GetAddressOf());
     if (FAILED(hr))
     {
-        throw std::runtime_error("Failed to create rasterizer state.");
+        LOG_ERROR("Failed to create default rasterizer state");
     }
+    LOG_INFO("Created default rasterizer state");
 
     // wireframe rasterizer state
     D3D11_RASTERIZER_DESC wfDesc = rasterDesc;
@@ -46,8 +48,9 @@ void Renderer::InitStateObjects(ID3D11Device *device)
         m_rasterizerStateWire_NoCull.GetAddressOf());
     if (FAILED(hr))
     {
-        throw std::runtime_error("Failed to create wireframe rasterizer state.");
+        LOG_ERROR("Failed to create wireframe rasterizer state");
     }
+    LOG_INFO("Created wireframe rasterizer state");
 
     // depth stencil state
     D3D11_DEPTH_STENCIL_DESC depthDesc = {};
@@ -59,8 +62,9 @@ void Renderer::InitStateObjects(ID3D11Device *device)
         m_depthStencilStateDefault.GetAddressOf());
     if (FAILED(hr))
     {
-        throw std::runtime_error("Failed to create depth stencil state.");
+        LOG_ERROR("Failed to create depth stencil state");
     }
+    LOG_INFO("Created default depth stencil state");
 
     // sampler state
     D3D11_SAMPLER_DESC samplerDesc = {};
@@ -73,8 +77,9 @@ void Renderer::InitStateObjects(ID3D11Device *device)
         m_samplerStateDefault.GetAddressOf());
     if (FAILED(hr))
     {
-        throw std::runtime_error("Failed to create sampler state.");
+        LOG_ERROR("Failed to create default sampler state");
     }
+    LOG_INFO("Created default sampler state");
 }
 
 void Renderer::InitImGui(HWND hwnd, ID3D11Device *device, ID3D11DeviceContext *context)
@@ -101,8 +106,9 @@ void Renderer::InitShadersAndLayout(ID3D11Device *device)
         nullptr, m_vsGeometry.GetAddressOf());
     if (FAILED(hr))
     {
-        throw std::runtime_error("Failed to create vertex shader.");
+        LOG_CRITICAL("Failed to create geometry vertex shader");
     }
+    LOG_INFO("Created geometry vertex shader");
 
     // compile geometry pixel shader
     Microsoft::WRL::ComPtr<ID3DBlob> psBlob;
@@ -112,8 +118,9 @@ void Renderer::InitShadersAndLayout(ID3D11Device *device)
         nullptr, m_psGeometry.GetAddressOf());
     if (FAILED(hr))
     {
-        throw std::runtime_error("Failed to create pixel shader.");
+        LOG_CRITICAL("Failed to create geometry pixel shader");
     }
+    LOG_INFO("Created geometry pixel shader");
 
     // create input layout
     D3D11_INPUT_ELEMENT_DESC layoutDesc[] = {
@@ -127,8 +134,9 @@ void Renderer::InitShadersAndLayout(ID3D11Device *device)
         m_inputLayout.GetAddressOf());
     if (FAILED(hr))
     {
-        throw std::runtime_error("Failed to create input layout.");
+        LOG_CRITICAL("Failed to create input layout");
     }
+    LOG_INFO("Created input layout");
 }
 
 void Renderer::InitConstantBuffers(ID3D11Device *device)
@@ -144,8 +152,9 @@ void Renderer::InitConstantBuffers(ID3D11Device *device)
     hr = device->CreateBuffer(&cbDesc, nullptr, m_cbPerFrame.GetAddressOf());
     if (FAILED(hr))
     {
-        throw std::runtime_error("Failed to create per-frame constant buffer.");
+        LOG_CRITICAL("Failed to create per-frame constant buffer");
     }
+    LOG_INFO("Created per-frame constant buffer");
 
     // create per-object cb
     // only the byte width changes, so we can reuse the same buffer description
@@ -153,8 +162,9 @@ void Renderer::InitConstantBuffers(ID3D11Device *device)
     hr = device->CreateBuffer(&cbDesc, nullptr, m_cbPerObject.GetAddressOf());
     if (FAILED(hr))
     {
-        throw std::runtime_error("Failed to create per-object constant buffer.");
+        LOG_CRITICAL("Failed to create per-object constant buffer");
     }
+    LOG_INFO("Created per-object constant buffer");
 }
 
 void Renderer::Init(DeviceManager *deviceManager, HWND hwnd, UINT width, UINT height)
@@ -170,8 +180,9 @@ void Renderer::Init(DeviceManager *deviceManager, HWND hwnd, UINT width, UINT he
 
     if (!m_GBuffer.Init(device, width, height))
     {
-        throw std::runtime_error("Failed to initialize GBuffer.");
+        LOG_CRITICAL("Failed to initialize GBuffer");
     }
+    LOG_INFO("Initialized GBuffer");
 }
 
 void Renderer::UpdatePerFrameConstants(const glm::mat4 &view, const glm::mat4 &proj)
@@ -194,7 +205,7 @@ void Renderer::OnResize(UINT width, UINT height)
     auto *context = m_DeviceManager->GetContext();
     if (!m_GBuffer.Init(device, width, height))
     {
-        throw std::runtime_error("Failed to reinitialize GBuffer on resize.");
+        LOG_CRITICAL("Failed to reinitialize GBuffer on resize");
     }
 }
 
@@ -222,15 +233,15 @@ void Renderer::GeometryPass(ECSRegistry &registry, AssetManager &assets)
         auto *material = assets.GetMaterial(meshComp.materialID);
         if (!material)
         {
-            OutputDebugStringA("[GeometryPass][WARN] Skipping entity due to missing material.\n");
+            LOG_WARN("Skipping entity {} due to missing material", ent);
             continue;
         }
         if (!mesh || !mesh->vertexBuffer || !mesh->indexBuffer || mesh->indexCount == 0)
         {
             if (!mesh)
-                OutputDebugStringA("[GeometryPass][WARN] Skipping entity due to missing mesh.\n");
+                LOG_WARN("Skipping entity {} due to missing mesh", ent);
             else
-                OutputDebugStringA("[GeometryPass][WARN] Skipping entity due to invalid mesh buffers.\n");
+                LOG_WARN("Skipping entity {} due to invalid mesh buffers", ent);
             continue;
         }
 
