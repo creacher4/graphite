@@ -2,273 +2,167 @@
 
 All notable changes to this project will be documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),  
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/).
+
+## [Unreleased]
+
+### Added
+
+- `Engine::InitCamera(width, height)` to encapsulate camera setup
+- `Engine::InitSystems(hwnd)` to encapsulate system and manager-initialization
+- `Engine::InitScene()` to encapsulate asset loading and test-entity creation
+
+### Changed
+
+- Refactored `Engine::Init` to delegate camera setup, system setup and scene setup to dedicated helper methods
+- Updated `Engine` headers and implementation files to reflect the new structure
 
 ## [0.5.0.2] – 2025-04-28
 
 ### Added
 
-- No-cull wireframe rasterizer state, toggleable via the stats ImGui window
-- `Engine::SetupCamera()` helper method to encapsulate camera creation and projection setup
+- Toggleable no-cull wireframe mode via the Engine Stats window.
+- `SetupCamera` helper for centralized camera creation and projection setup.
 
 ### Changed
 
-- Normalized camera yaw in the Engine Stats UI to wrap 0°–360° instead of growing unbounded
-- `Renderer::Init` refactored into private helpers (`InitStateObjects`, `InitImGui`, `InitShadersAndLayout`, `InitConstantBuffers`) with no functional changes
-- `Renderer::GeometryPass` split into private helpers (`SetPassState`, `UpdatePerObjectConstantBuffer`, `BindMaterial`, `DrawMesh`, `UnbindMaterial`) to improve readability
+- Camera yaw display normalized to wrap between 0°–360°
+- Refactored `Renderer::Init` and `GeometryPass` into smaller helper methods for clarity (no functional changes)
 
 ## [0.5.0] – 2025-04-27
 
 ### Added
 
-- Assimp-based model loader:
-  - `AssetManager::LoadModel()` will now read `.gltf`/`.fbx`/`.blend` via Assimp
-  - Automatically builds vertex/index buffers from the first mesh in the scene
-- Texture pipeline:
-  - `AssetManager::LoadTexture()` uses `stb_image` to load PNG/JPEG and creates immutable D3D11 textures + SRVs
-- Material system:
-  - New `Material` struct (albedo, normal, ORM IDs and fallback factors)
-  - `AssetManager::AddMaterial()` / `GetMaterial()` to register and retrieve materials
-- `RenderableComponent` & ECS integration:
-  - Replace primitive cube with `RenderableComponent{ meshID, materialID }`
-  - Engine now loads a model, its textures, creates a `Material` and spawns an entity accordingly
-- Deferred renderer updates:
-  - Expanded `Vertex` and input layout to include a `TANGENT` element
-  - VS computes world-space tangents & bitangents, PS samples normal map and remaps into world-space normals
-  - Bound material SRVs and sampler inside `GeometryPass()`
-- ImGui G-Buffer viewer enhancements:
-  - Added a fourth radio-button `Depth` to inspect the raw depth SRV
+- Assimp-based model loading for `.gltf`, `.fbx` and `.blend` files
+- Texture loading pipeline using `stb_image`
+- Material system with `Material` structs and `AssetManager` integration
+- `RenderableComponent` for ECS-based entity rendering
+- Normal mapping support in the deferred rendering pipeline
+- Depth view option in the G-Buffer viewer
 
 ### Changed
 
-- Renamed `MeshComponent` to `RenderableComponent`, removed primitive-only path
-- Kept `InitPrimitiveMeshes()` as a fallback cube loader but primary mesh loading uses Assimp
-- CMakeLists now pulls in Assimp and `stb_image.h`
-- Updated default rasterizer state to `D3D11_CULL_BACK` (back-face culling)
+- Renamed `MeshComponent` to `RenderableComponent`
+- Default rasterizer state updated to enable back-face culling
 
 ### Fixed
 
-- Pixel shader now correctly generates and binds tangents/bitangents so normal maps render properly in the G-Buffer
-- Fixed wrong winding order in imported meshes
+- Normal maps now render correctly in the G-Buffer
+- Fixed incorrect winding order in imported meshes
 
 ## [0.4.2] – 2025-04-27
 
 ### Added
 
-- Stats panel:
-  - New `StatsSystem` gathers per-frame metrics (frame time, FPS, draw call count, triangle count, camera position & yaw/pitch) in `StatsSystem::Update()`
-  - New `StatsSystem::DrawImGui()` renders an ImGui “Engine Stats” window showing those metrics, toggleable with `F1`
-  - `Renderer` now tracks and exposes its draw calls and triangle count (reset in `BeginFrame`, incremented in `GeometryPass`) and accepts a `StatsSystem*` in `EndFrame()` to drive the UI
-- System wiring:
-  - `Engine::Init()` now creates, injects and registers the `StatsSystem` (before `RenderSystem`)
-  - `RenderSystem::Update()` passes its `StatsSystem*` into `Renderer::EndFrame()`
+- Engine Stats window showing frame metrics (FPS, draw calls, triangle count, camera position, etc.)
+- `StatsSystem` to gather and display performance statistics
 
 ### Changed
 
-- Renderer:
-  - `BeginFrame()` resets draw/triangle counters
-  - `GeometryPass()` increments counters per-mesh
-  - `EndFrame()` signature updated to take `StatsSystem*` and invoke `DrawImGui()`
-- RenderSystem:
-  - `Update()` now calls `m_Renderer.EndFrame(m_stats)` instead of parameterless `EndFrame()`
-- Engine:
-  - `OnResize()` updates camera’s projection aspect automatically
-  - Added injection of `StatsSystem` into both `RenderSystem` and `Renderer`
+- Updated `Renderer` and `RenderSystem` to integrate with `StatsSystem`.
 
 ### Fixed
 
-- Stats window remained updateless — now the system is registered and its `DrawImGui()` is invoked each frame
+- Stats window now updates properly each frame
 
 ## [0.4.1] – 2025-04-26
 
 ### Added
 
-- Camera:
-  - `GetFovY()`, `GetNearZ()`, and `GetFarZ()` accessors to expose the current projection parameters
+- Camera accessors for FOV and clip plane distances
 
 ### Changed
 
-- Camera:
-  - Cached `forward`, `right` and `up` vectors inside `RecalcView()`
-  - `GetForward()`, `GetRight()` and `GetUp()` now return those cached vectors instead of recomputing via matrix inversion
-- AssetManager:
-  - `GetMesh(const std::string&)` now returns `const MeshResource*` to enforce read-only access to shared mesh data
-- Engine:
-  - `Engine::OnResize` updates the camera’s projection by re-calling `Camera::SetPerspective(…)` with the new aspect ratio, preventing view distortion on window resizes
+- Cached camera basis vectors for improved performance
+- Enforced read-only access to mesh resources through `AssetManager`
+- Camera projection now updates automatically on window resize
 
 ### Removed
 
-- Removed the `InputSystem` class and its registration in `Engine` — all raw input is now handled directly by `InputManager`
+- Deprecated `InputSystem`; input handling is now fully managed by `InputManager`
 
 ## [0.4.0] – 2025-04-26
 
 ### Added
 
-- Input System:
-  - New `InputManager` singleton capturing raw Win32 events (`WM_KEYDOWN`, `WM_KEYUP`, `WM_MOUSEMOVE`) and exposing:
-    - `NewFrame()` to roll input state each frame
-    - `IsDown(vk)` and `WasPressed(vk)` for key queries
-    - `GetMouseDelta()` for relative mouse movement
-  - `InputSystem` now calls `InputManager::Get().NewFrame()` in its `Update(float dt)`.
-- Camera & Controller:
-  - New `Camera` class with:
-    - Separate yaw & pitch Euler angles (clamped to ±89°) to eliminate roll
-    - `LookAt()`, `Translate()` and `Rotate(yaw, pitch)` methods
-    - Lazy-recalc of view & projection matrices
-  - New `CameraController` system deriving from `ISystem`:
-    - RMB-held mouse look (yaw/pitch) via `Camera::Rotate`
-    - WASD movement in camera–local forward/right directions (`Camera::Forward()`, `Camera::Right()`)
-    - Integrated ImGui capture checks to avoid conflicts
-- System Framework:
-  - Changed `ISystem::Update()` to `Update(float deltaTime)`
-  - `SystemManager::UpdateAll(float deltaTime)` now propagates delta time to each system
-  - `Application`/`Engine` now compute per-frame `deltaTime` (e.g. via `std::chrono`) and call `UpdateAll(deltaTime)`
-- Engine Integration:
-  - Injected `Camera` into `CameraController` and `RenderSystem`
-  - `RenderSystem::Update(float dt)` now fetches view/projection from the active `Camera` instead of static matrices
+- `InputManager` for capturing raw Win32 input
+- `Camera` class and `CameraController` system for 3D movement and view control
+- Delta-time propagation across systems
+- Dynamic camera injection into the `RenderSystem`
 
 ### Changed
 
-- Removed unintended roll behavior in camera look; pitch no longer rolls the camera sideways
-- Flipped forward/back mapping so `'W'` moves forward and `'S'` moves backward relative to camera orientation
+- Eliminated unintended camera roll behavior
+- Improved WASD navigation relative to camera orientation
 
 ### Fixed
 
-- Clamped camera pitch to ±89° and used euler angles instead of quaternions to prevent roll when looking up/down
-- Ensured ImGui input capture flags block camera movement while interacting with UI
+- Clamped camera pitch to prevent flipping
+- Blocked camera movement when interacting with UI elements
 
 ## [0.3.0] – 2025-04-25
 
 ### Added
 
-- System Architecture:
-  - Introduced `ISystem` interface defining `Init()`, `Update()`, and `Shutdown()` methods
-  - Implemented `SystemManager` class to manage `ISystem` lifecycle (`InitAll`, `UpdateAll`, `ShutdownAll`)
-  - Created functional `RenderSystem` and `ResizeSystem` inheriting from `ISystem`. (InputSystem remains placeholder)
-- Device Management:
-  - Implemented `DeviceManager` to centralize `ID3D11Device`, `ID3D11DeviceContext`, and `IDXGISwapChain` creation, ownership, and shutdown
-  - Added `DeviceManager::ResizeSwapChain` to handle window resize events, including recreating the back buffer Render Target View (`m_BackBufferRTV`)
-  - Added accessors (`GetDevice`, `GetContext`, `GetSwapChain`, `GetBackBufferRTV`) to `DeviceManager`
-- Asset Management:
-  - Implemented `AssetManager` to centralize resource loading and management
-  - Added `AssetManager::InitPrimitiveMeshes` to load hardcoded cube mesh data and create immutable vertex/index buffers using `DeviceManager`
-  - Added `AssetManager::Shutdown` to release loaded mesh resources
-- Dependency Injection:
-  - Implemented dependency injection via setter methods (`SetDeviceManager`, `SetAssetManager`, etc.) called during `Engine::Init` to provide systems and managers with required dependencies
-  - RenderSystem now exposes `SetViewProjection(view, proj)` and Application/Engine pass current view/proj each frame
-- Resize Handling:
-  - Completed resize event pipeline: `PlatformWindow` -> `Engine` -> `ResizeSystem`
-  - `ResizeSystem::OnResize` now coordinates calls to `DeviceManager::ResizeSwapChain` and `RenderSystem::OnResize`
-  - Implemented `RenderSystem::OnResize` which calls `Renderer::OnResize`
-  - Implemented `Renderer::OnResize` which re-initializes the `GBuffer` with new dimensions using the `DeviceManager`
+- Modular `ISystem` and `SystemManager` architecture for systems lifecycle management
+- `DeviceManager` for central device/context/swapchain handling
+- `AssetManager` for resource loading
+- Dependency injection for systems and managers
+- Full resize pipeline handling via `ResizeSystem`
 
 ### Changed
 
-- Engine Core:
-  - `Engine` now owns and initializes `DeviceManager` and `AssetManager`
-  - `Engine::Init` orchestrates manager creation and system registration/dependency injection
-  - `Engine::Shutdown` now correctly calls shutdown methods on `SystemManager`, `AssetManager`, and `DeviceManager` in the appropriate order
-  - `Application::Run` now passes temporary view/projection matrices from `Engine` to `RenderSystem` each frame
-- Rendering Pipeline:
-  - `Renderer` class refactored: no longer owns device/context/swapchain; uses injected `DeviceManager`
-  - `RenderSystem::Update` now orchestrates the frame rendering sequence by calling methods on its `Renderer` instance (`UpdatePerFrameConstants`, `BeginFrame`, `GeometryPass`, `EndFrame`)
-  - `Renderer::EndFrame` now uses `DeviceManager` to get the back buffer RTV and swap chain for ImGui rendering and presentation
-- Resource Management:
-  - `AssetManager` now responsible for primitive mesh creation, using the centralized `DeviceManager`
+- Refactored `Engine`, `Renderer`, and `Application` to use new managers and systems
 
 ### Removed
 
-- `ResourceManager` class and associated files (functionality merged into `AssetManager`)
-- Direct device/context/swapchain creation and ownership within the `Renderer` class
-- `Engine::Render()` method and all direct calls to it
+- Old `ResourceManager` (merged into `AssetManager`)
 
 ### Fixed
 
-- Fixed issue where the back-buffer wasn't being cleared properly (in `Renderer::EndFrame()`), causing ghosting/artifacts on the window
+- Proper clearing of the back buffer to eliminate ghosting artifacts
 
 ## [0.2.0] – 2025-04-25
 
 ### Added
 
-- Deferred Rendering Pipeline:
-  - Implemented `GBuffer` class managing Albedo (`RGBA8`), Normal (`RGBA16F`), and ORM (`RGBA8`) render targets, plus a Depth buffer (`D24S8`)
-  - GBuffer includes creation of Textures, Render Target Views (RTVs), Depth Stencil View (DSV), and Shader Resource Views (SRVs)
-  - Added `GBuffer::Bind` and `GBuffer::Clear` methods for pipeline setup
-- Shader System:
-  - Introduced HLSL shaders: `GeometryVS.hlsl` for vertex transformation and `GeometryPS.hlsl` for outputting to G-Buffer targets
-  - Added `ShaderUtils` helper for compiling HLSL shaders using `D3DCompileFromFile` with debug/release flags
-  - Renderer now compiles and creates `ID3D11VertexShader` and `ID3D11PixelShader` objects
-- Geometry Pass:
-  - Implemented `Renderer::GeometryPass` function to handle drawing scene geometry
-  - `GeometryPass` iterates ECS entities with `TransformComponent` and `MeshComponent`
-  - Binds appropriate pipeline states (Shaders, IA Layout, Rasterizer, Depth State)
-  - Binds vertex/index buffers from `ResourceManager` based on `MeshComponent`
-  - Issues `DrawIndexed` calls to render geometry into the G-Buffer
-- GPU Data Transfer:
-  - Added `ConstantBuffers.h` defining `PerFrameData` (View, Projection) and `PerObjectData` (World matrix) structs with `alignas(16)`
-  - Renderer creates and manages dynamic `ID3D11Buffer` constant buffers (`m_cbPerFrame`, `m_cbPerObject`)
-  - Implemented `Renderer::UpdatePerFrameConstants` to update frame data via `Map`/`Unmap`
-  - `GeometryPass` calculates world matrices from `TransformComponent` and updates the per-object constant buffer
-- Pipeline State Management:
-  - Added explicit creation and use of `ID3D11RasterizerState` (Solid fill, No culling)
-  - Added explicit creation and use of `ID3D11DepthStencilState` (Depth test/write enabled, `LESS` comparison)
-  - Created `ID3D11InputLayout` based on `Vertex` struct (`POSITION`, `NORMAL`, `TEXCOORD`) to link vertex buffers to the vertex shader stage
-- Camera Setup:
-  - Added static View (`glm::lookAt`) and Projection (`glm::perspective`) matrices in `Engine`
-  - Camera matrices are passed to the renderer via `UpdatePerFrameConstants`
-- Debugging UI:
-  - Integrated Dear ImGui library (with Win32 and DirectX 11 backends)
-  - Added G-Buffer Viewer window in `Renderer::EndFrame` using ImGui::Image to display G-Buffer SRVs
-- Core System Support:
-  - Propagated window dimensions (`width`, `height`) from `PlatformWindow` through `Application`/`Engine` to `Renderer::Init` for G-Buffer creation
-  - `Renderer` now exposes `GetDevice()` for external buffer creation (used by `ResourceManager`)
-  - Added ECS `TransformComponent` and `MeshComponent` for scene definition
-  - Implemented cube primitive mesh generation in `ResourceManager`
-  - Added basic `README.md`
-  - Added ECS debug logging via `OutputDebugStringA`, viewed through [DebugView](https://learn.microsoft.com/en-us/sysinternals/downloads/debugview)
-  - Added `build.bat`, `remake.bat` and `run.bat` for convenience in building via CMake.
+- Deferred rendering pipeline with G-Buffer (Albedo, Normal, ORM, Depth)
+- Basic HLSL shaders for geometry pass
+- Geometry rendering through ECS-based iteration
+- GPU constant buffer management for per-frame and per-object data
+- Pipeline state objects (Rasterizer, Depth-Stencil states)
+- Static camera setup
+- Dear ImGui integration for G-Buffer visualization
+- ECS components for transforms and meshes
+- Primitive mesh generation for testing
+- Basic build scripts (`build.bat`, `remake.bat`, `run.bat`)
 
 ### Changed
 
-- Fundamentally reworked `Renderer` to manage the deferred rendering pipeline instead of just clearing/presenting the back buffer
-- Updated `Engine::Render` call sequence to `UpdatePerFrameConstants` -> `BeginFrame` -> `GeometryPass` -> `EndFrame`
-- Frame Lifecycle:
-  - `Renderer::BeginFrame` now binds and clears the G-Buffer targets
-  - `Renderer::EndFrame` now binds the back buffer RTV (`nullptr` DSV), renders ImGui UI, and presents the swap chain
-- `PlatformWindow::WndProc` now forwards input messages to ImGui via `ImGui_ImplWin32_WndProcHandler`
-- Changed `Vertex` struct members from `glm::vec3`/`vec2` to raw `float[3]` / `float[2]` arrays (ensured input layout format still matches)
-- Refactored ECS iteration in `Engine::Update` (and `GeometryPass`) to use `entt::view.each()`
-- `Engine` initialization order adjusted (`Renderer` before `ResourceManager`)
-- Removed test `NameComponent`
+- Overhauled `Renderer` to fully manage the deferred pipeline.
+- Restructured engine frame lifecycle around new rendering stages.
 
 ### Fixed
 
-- Fixed issue where geometry failed to render to G-Buffer targets. Corrected matrix multiplication order in `GeometryVS.hlsl` from `mul(vector, matrix)` to `mul(matrix, vector)` to properly handle column-major matrices from GLM.
-- Fixed crash caused by attempting to use uninitialized GBuffer render target views (`nullptr`) during `ClearRenderTargetView` calls.
-- Fixed `TransformComponent` GLM include issue.
-- Fixed ECS loop iteration error caused by incorrect use of `entt::view` in range-based for loop.
+- Corrected matrix multiplication order in shaders.
+- Prevented crashes from uninitialized GBuffer targets.
 
 ## [0.1.0] – 2025-04-23
 
 ### Added
 
-- `Application` class and `PlatformWindow` abstraction (Win32).
-- `Engine` class with basic `Init`, `Update`, `Render` structure.
-- Initial `Renderer` setup for DX11 device/swapchain, backbuffer RTV, clear/present.
-- Basic ECS setup using EnTT library (`ECSRegistry`, initial `NameComponent`).
-- `InputManager` stub class.
-- Initial ECS entity test with per-frame logging.
-- Basic CMake project setup with DX11 linking.
-- Initial window resizing support via DXGI scaling (no explicit buffer reallocation).
+- Basic `Application`, `Engine`, `Renderer` and Win32 windowing
+- Initial ECS setup using `EnTT`
+- Basic Direct3D 11 device/swapchain/backbuffer management
+- `InputManager` stub
+- Early CMake project setup
 
 ### Changed
 
-- Adopted RAII using `Microsoft::WRL::ComPtr` for all DirectX COM objects, replacing manual `Release` calls.
-- Ensured safe use of `.GetAddressOf()` for `ComPtr` initialization.
+- Adopted RAII principles with `ComPtr` for DirectX objects
 
 ### Fixed
 
-- Resolved linker error for `D3D11CreateDeviceAndSwapChain`.
-- Corrected incomplete type usage errors with `std::unique_ptr`.
-- Fixed incorrect `ComPtr` argument passing to `ClearRenderTargetView` and `OMSetRenderTargets`.
+- Resolved linker errors for D3D11 device creation
+- Fixed ECS transform component and input forwarding issues
