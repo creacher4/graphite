@@ -9,7 +9,9 @@
 
 void RenderSystem::Init()
 {
-    assert(m_DeviceManager && m_AssetManager && m_Registry && m_Hwnd && m_Camera);
+    if (!m_DeviceManager || !m_AssetManager || !m_Registry || !m_Hwnd || !m_Camera)
+        throw std::runtime_error("RenderSystem::Init precondition failed: one or more dependencies are null");
+
     OutputDebugStringA("[RenderSystem] Initialized.\n");
 
     m_Renderer.Init(

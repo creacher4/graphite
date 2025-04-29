@@ -12,5 +12,5 @@ int WINAPI WinMain(
 
     Application app(hInstance);
     app.Run();
-    return 0;
+    return EXIT_SUCCESS;
 }

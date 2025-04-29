@@ -27,7 +27,8 @@ class Camera
             cos(m_pitch) * sin(m_yaw),
             sin(m_pitch),
             cos(m_pitch) * cos(m_yaw)});
-        m_right = glm::normalize(glm::cross(m_forward, glm::vec3(0, 1, 0)));
+        glm::vec3 worldUp = glm::vec3(0, 1, 0);
+        m_right = glm::normalize(glm::cross(m_forward, worldUp));
         m_up = glm::cross(m_right, m_forward);
 
         m_view = glm::lookAt(m_pos, m_pos + m_forward, m_up);
