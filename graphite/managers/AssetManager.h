@@ -7,8 +7,10 @@
 #include <wrl/client.h>
 #include <d3d11.h>
 #include <Windows.h>
+#include <assimp/mesh.h>
 #include "DeviceManager.h"
 #include "rendering/Material.h"
+#include "rendering/Vertex.h"
 
 using AssetID = std::filesystem::path;
 
@@ -33,7 +35,6 @@ public:
     ~AssetManager() = default;
 
     void SetDeviceManager(DeviceManager *deviceManager);
-    bool InitPrimitiveMeshes();
 
     bool LoadTexture(const AssetID &path);
     bool LoadModel(const AssetID &path);
@@ -52,4 +53,28 @@ private:
     std::map<AssetID, MeshResource> m_Meshes;
     std::map<AssetID, TextureResource> m_Textures;
     std::map<AssetID, Material> m_Materials;
+
+    // helpers
+    bool ProcessAssimpMesh(
+        aiMesh *mesh,
+        std::vector<Vertex> &outVertices,
+        std::vector<uint32_t> &outIndices) const;
+
+    bool CreateMeshResourceBuffers(
+        const std::vector<Vertex> &vertices,
+        const std::vector<uint32_t> &indices,
+        MeshResource &outResource) const;
+
+    unsigned char *LoadImageDataFromFile(
+        const AssetID &path,
+        int &outWidth,
+        int &outHeight,
+        int &outChannels) const;
+
+    bool CreateTextureAndSRV(
+        int width,
+        int height,
+        DXGI_FORMAT format,
+        unsigned char *pixelData,
+        TextureResource &outResource) const;
 };

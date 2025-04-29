@@ -9,14 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
-- `Engine::InitCamera(width, height)` to encapsulate camera setup
-- `Engine::InitSystems(hwnd)` to encapsulate system and manager-initialization
-- `Engine::InitScene()` to encapsulate asset loading and test-entity creation
+- Modular engine setup helpers: `InitCamera`, `InitSystems` and `InitScene`
+- Refactored `AssetManager` to separate mesh processing and texture loading into focused internal helpers for better code clarity and reuse
 
 ### Changed
 
-- Refactored `Engine::Init` to delegate camera setup, system setup and scene setup to dedicated helper methods
-- Updated `Engine` headers and implementation files to reflect the new structure
+- `Engine::Init` now delegates responsibilities to dedicated helpers for initialization tasks
+- `Application::Run()` now returns `int` exit code instead of `void`
+- Replaced internal assert checks with explicit runtime exceptions for more controlled error handling
 
 ## [0.5.0.2] – 2025-04-28
 

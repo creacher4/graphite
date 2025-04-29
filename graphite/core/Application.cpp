@@ -14,20 +14,8 @@ Application::Application(HINSTANCE hInstance)
                                 { m_Engine->OnResize(w, h); });
 }
 
-void Application::Run()
+int Application::Run()
 {
-    // using clock = std::chrono::high_resolution_clock;
-    // auto last = clock::now();
-
-    // while (m_Window->ProcessMessages())
-    // {
-    //     auto now = clock::now();
-    //     float dt = std::chrono::duration<float>(now - last).count();
-    //     last = now;
-
-    //     m_Engine->Update(dt);
-    // }
-
     LARGE_INTEGER freq, prev, now;
     QueryPerformanceFrequency(&freq);
     QueryPerformanceCounter(&prev);
@@ -49,4 +37,5 @@ void Application::Run()
     }
 
     m_Engine->Shutdown();
+    return 0;
 }

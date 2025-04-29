@@ -9,7 +9,7 @@ class Application
 {
 public:
     Application(HINSTANCE hInstance);
-    void Run();
+    int Run();
 
 private:
     std::unique_ptr<PlatformWindow> m_Window;
