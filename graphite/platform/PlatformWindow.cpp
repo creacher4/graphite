@@ -2,6 +2,7 @@
 #include "input/InputManager.h"
 #include <stdexcept>
 #include <imgui_impl_win32.h>
+#include "utils/Logger.h"
 
 extern LRESULT ImGui_ImplWin32_WndProcHandler(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
@@ -49,7 +50,11 @@ PlatformWindow::PlatformWindow(HINSTANCE hInstance, int width, int height, const
                            NULL, NULL, hInstance, NULL);
 
     if (!m_HWND)
-        throw std::runtime_error("Failed to create window.");
+    {
+        // i dont think the formatting {} will work here because of the macro
+        LOG_ERROR("Failed to create window. GetLastError: {}", GetLastError());
+        UnregisterClass(wc.lpszClassName, wc.hInstance);
+    }
 
     SetWindowLongPtr(m_HWND, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(this));
 
@@ -79,7 +84,7 @@ bool PlatformWindow::ProcessMessages()
     {
         if (msg.message == WM_QUIT)
         {
-            OutputDebugStringA("WM_QUIT received, exiting application.\n");
+            LOG_INFO("Received WM_QUIT message. Exiting application.");
             return false;
         }
 

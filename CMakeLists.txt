@@ -30,6 +30,7 @@ add_executable(Graphite WIN32
 
     # utils
     utils/ShaderUtils.cpp
+    utils/Logger.cpp
 
     # external sources
     external/imgui/imgui.cpp
@@ -46,18 +47,25 @@ add_executable(Graphite WIN32
 target_include_directories(Graphite PRIVATE
     ${CMAKE_SOURCE_DIR}/graphite
     ${CMAKE_SOURCE_DIR}/utils
+    ## logger doesn't get included if i dont add source directory
+    ## if i use #include "Logger.h", it doesn't work
+    ${CMAKE_SOURCE_DIR}
     ${CMAKE_SOURCE_DIR}/shaders
     ${CMAKE_SOURCE_DIR}/external/entt/single_include/entt
     ${CMAKE_SOURCE_DIR}/external/glm
     ${CMAKE_SOURCE_DIR}/external/imgui
     ${CMAKE_SOURCE_DIR}/external/imgui/backends
     ${CMAKE_SOURCE_DIR}/external/stb
+    ${CMAKE_SOURCE_DIR}/external/spdlog/include
 )
+
+add_subdirectory(external/spdlog)
 
 target_link_libraries(Graphite PRIVATE
     d3d11
     dxgi
     d3dcompiler
+    spdlog
 )
 
 set_target_properties(Graphite PROPERTIES
