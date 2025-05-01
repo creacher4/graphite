@@ -1,5 +1,6 @@
 #include "AssetManager.h"
 #include "DeviceManager.h"
+#include "utils/Logger.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
@@ -24,7 +25,7 @@ void AssetManager::SetDeviceManager(
 void AssetManager::Shutdown()
 {
     m_Meshes.clear();
-    OutputDebugStringA("[AssetManager] Shutdown complete.\n");
+    LOG_INFO("AssetManager: Meshes cleared");
 }
 
 bool AssetManager::LoadTexture(
@@ -61,7 +62,7 @@ bool AssetManager::LoadModel(
 
     if (!scene || !scene->HasMeshes())
     {
-        OutputDebugStringA("[AssetManager] Failed to load model.\n");
+        LOG_ERROR("Failed to load model");
         return false;
     }
 
@@ -71,19 +72,19 @@ bool AssetManager::LoadModel(
 
     if (!ProcessAssimpMesh(mesh, vertices, indices))
     {
-        OutputDebugStringA("[AssetManager] Failed to process mesh.\n");
+        LOG_ERROR("Failed to process mesh");
         return false;
     }
 
     MeshResource mr;
     if (!CreateMeshResourceBuffers(vertices, indices, mr))
     {
-        OutputDebugStringA("[AssetManager] Failed to create mesh resource buffers.\n");
+        LOG_ERROR("Failed to create mesh resource buffers");
         return false;
     }
 
     m_Meshes[path] = std::move(mr);
-    OutputDebugStringA("[AssetManager] Model loaded successfully.\n");
+    LOG_INFO("Model loaded succesfully");
     return true;
 }
 
@@ -189,7 +190,7 @@ bool AssetManager::CreateMeshResourceBuffers(
     D3D11_SUBRESOURCE_DATA vbData{vertices.data(), 0, 0};
     if (FAILED(device->CreateBuffer(&vbDesc, &vbData, outResource.vertexBuffer.GetAddressOf())))
     {
-        OutputDebugStringA("[AssetManager] Vertex buffer creation failed.\n");
+        LOG_ERROR("Vertex buffer creation failed");
         return false;
     }
 
@@ -201,7 +202,7 @@ bool AssetManager::CreateMeshResourceBuffers(
     D3D11_SUBRESOURCE_DATA ibData{indices.data(), 0, 0};
     if (FAILED(device->CreateBuffer(&ibDesc, &ibData, outResource.indexBuffer.GetAddressOf())))
     {
-        OutputDebugStringA("[AssetManager] Index buffer creation failed.\n");
+        LOG_ERROR("Index buffer creation failed");
         return false;
     }
 
@@ -223,9 +224,7 @@ unsigned char *AssetManager::LoadImageDataFromFile(
 
     if (!data)
     {
-        OutputDebugStringA("[AssetManager] stb_image failed to load: ");
-        OutputDebugStringA(path.string().c_str());
-        OutputDebugStringA("\n");
+        LOG_ERROR("Failed to load image data from file: {}", path.string());
     }
 
     return data;
@@ -266,7 +265,7 @@ bool AssetManager::CreateTextureAndSRV(
     HRESULT hr = device->CreateTexture2D(&texDesc, &initData, tex.GetAddressOf());
     if (FAILED(hr))
     {
-        OutputDebugStringA("[AssetManager] CreateTexture2D failed\n");
+        LOG_ERROR("CreateTexture2D failed: {}", hr);
         stbi_image_free(pixelData);
         return false;
     }
@@ -279,7 +278,7 @@ bool AssetManager::CreateTextureAndSRV(
         srv.GetAddressOf());
     if (FAILED(hr))
     {
-        OutputDebugStringA("[AssetManager] CreateShaderResourceView failed\n");
+        LOG_ERROR("CreateShaderResourceView failed: {}", hr);
         stbi_image_free(pixelData);
         return false;
     }

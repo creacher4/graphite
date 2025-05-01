@@ -5,6 +5,7 @@
 
 #include "systems/RenderSystem.h"
 #include "rendering/Camera.h"
+#include "input/InputManager.h"
 
 void StatsSystem::Init()
 {
@@ -33,7 +34,7 @@ void StatsSystem::Update(float dt)
     m_camYaw = wrappedYaw;
     m_camPitch = yawp.y;
 
-    if (GetAsyncKeyState(VK_F1) & 1)
+    if (InputManager::Get().WasPressed(VK_F1))
         m_showWindow = !m_showWindow;
 }
 

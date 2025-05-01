@@ -20,8 +20,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - `Engine::Init` now delegates responsibilities to dedicated helpers for initialization tasks
 - `Application::Run()` now returns `int` exit code instead of `void`
 - Replaced internal assert checks with explicit runtime exceptions for more controlled error handling
-- Most `OutputDebugStringA` calls replaced with structured log messages
+- All `OutputDebugStringA` calls replaced with structured log messages
 - Engine subsystems now emit consistent, leveled log messages
+- Deleted redundant `Mesh.h` and subsequent includes
+- Updated `StatsSystem::Update` to use `InputManager::Get().WasPressed(VK_F1)` instead of `GetAsyncKeyState(VK_F1)`
 
 ### Fixed
 
