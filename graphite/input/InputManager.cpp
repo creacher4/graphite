@@ -19,11 +19,9 @@ void InputManager::HandleWin32Message(UINT msg, WPARAM w, LPARAM l)
         break;
     case WM_RBUTTONDOWN:
         m_current[VK_RBUTTON] = true;
-        // OutputDebugStringA(">> InputManager got WM_RBUTTONDOWN\n");
         break;
     case WM_RBUTTONUP:
         m_current[VK_RBUTTON] = false;
-        // OutputDebugStringA(">> InputManager got WM_RBUTTONUP\n");
         break;
     case WM_MOUSEMOVE:
         m_curMouse.x = LOWORD(l);

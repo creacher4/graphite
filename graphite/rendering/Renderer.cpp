@@ -4,7 +4,6 @@
 #include <stdexcept>
 #include "ecs/RenderableComponent.h"
 #include "Material.h"
-#include "Mesh.h"
 #include "Vertex.h"
 #include "Logger.h"
 #include "ConstantBuffers.h"

@@ -2,6 +2,7 @@
 #include "ecs/TransformComponent.h"
 #include "ecs/RenderableComponent.h"
 #include "rendering/Material.h"
+#include "utils/Logger.h"
 #include <string>
 #include <sstream>
 #include <glm/gtc/matrix_transform.hpp>
@@ -98,7 +99,7 @@ void Engine::InitSystems(HWND hwnd)
 
 void Engine::InitScene()
 {
-    OutputDebugStringA("[Engine] Loading scene assets...\n");
+    LOG_INFO("Initializing scene...");
     try
     {
         AssetID modelPath = "assets/models/boulder/boulder_01_8k.gltf";
@@ -109,19 +110,18 @@ void Engine::InitScene()
 
         // load model
         if (!m_AssetManager->LoadModel(modelPath))
-            throw std::runtime_error("Failed to load model.");
-        OutputDebugStringA("[Engine] Model loaded successfully.\n");
+            LOG_ERROR("Failed to load model");
 
         // load textures
         if (!m_AssetManager->LoadTexture(albedoPath) ||
             !m_AssetManager->LoadTexture(normalPath) ||
             !m_AssetManager->LoadTexture(ormPath))
-            throw std::runtime_error("Failed to load textures.");
+            LOG_ERROR("Failed to load textures");
 
         // create material
         Material mat{albedoPath, normalPath, ormPath};
         if (!m_AssetManager->AddMaterial(materialID, mat))
-            throw std::runtime_error("Failed to add material.");
+            LOG_ERROR("Failed to add material");
 
         auto entity = m_Registry->CreateEntity();
         // set at origin with no rotation and scale of 1
@@ -131,7 +131,7 @@ void Engine::InitScene()
     }
     catch (const std::exception &e)
     {
-        OutputDebugStringA(std::string("[Engine] InitScene error: " + std::string(e.what()) + "\n").c_str());
+        LOG_ERROR("Error initializing scene: {}", e.what());
         throw;
     }
 }

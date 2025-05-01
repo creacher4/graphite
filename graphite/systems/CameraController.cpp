@@ -14,11 +14,11 @@ void CameraController::Update(float dt)
     // mouse look only when rmb hold
     if (InputManager::Get().IsDown(VK_RBUTTON))
     {
-        // OutputDebugStringA(">> CameraController sees RMB held\n");
+        // LOG_INFO("Mouse is down");
         auto md = InputManager::Get().GetMouseDelta();
         // char buf[64];
         // sprintf(buf, ">> MouseDelta = %d, %d\n", md.x, md.y);
-        // OutputDebugStringA(buf);
+        // LOG_INFO(buf);
 
         float yaw = -md.x * m_lookSpeed;
         float pitch = -md.y * m_lookSpeed;

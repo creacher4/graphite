@@ -1,4 +1,5 @@
 #include "ShaderUtils.h"
+#include "Logger.h"
 #include <stdexcept>
 #include <Windows.h>
 
@@ -30,7 +31,7 @@ bool CompileShaderFromFile(
     {
         if (errorBlob)
         {
-            OutputDebugStringA((char *)errorBlob->GetBufferPointer());
+            LOG_ERROR("Shader compilation error: {}", static_cast<const char *>(errorBlob->GetBufferPointer()));
         }
         return false;
     }
