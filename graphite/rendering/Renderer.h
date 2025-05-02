@@ -15,6 +15,15 @@ class DeviceManager;
 struct Material;
 struct Mesh;
 
+// defining directional light structure here for now
+struct DirectionalLightData
+{
+    glm::vec3 dir;
+    float pad0;
+    glm::vec3 color;
+    float pad1;
+};
+
 class Renderer
 {
 public:
@@ -24,6 +33,7 @@ public:
     void OnResize(UINT width, UINT height);
     void BeginFrame();
     void GeometryPass(ECSRegistry &registry, AssetManager &assetManager);
+    void LightingPass();
     void EndFrame(StatsSystem *stats);
     void UpdatePerFrameConstants(const glm::mat4 &view, const glm::mat4 &proj);
 
@@ -54,9 +64,13 @@ private:
     Microsoft::WRL::ComPtr<ID3D11PixelShader> m_psGeometry;
     Microsoft::WRL::ComPtr<ID3D11InputLayout> m_inputLayout;
 
+    Microsoft::WRL::ComPtr<ID3D11VertexShader> m_vsLighting;
+    Microsoft::WRL::ComPtr<ID3D11PixelShader> m_psLighting;
+
     // buffer members
     Microsoft::WRL::ComPtr<ID3D11Buffer> m_cbPerFrame;
     Microsoft::WRL::ComPtr<ID3D11Buffer> m_cbPerObject;
+    Microsoft::WRL::ComPtr<ID3D11Buffer> m_cbLight;
 
     // bla bla
     int m_drawCallCount = 0;
@@ -69,6 +83,7 @@ private:
     void InitImGui(HWND hwnd, ID3D11Device *device, ID3D11DeviceContext *context);
     void InitShadersAndLayout(ID3D11Device *device);
     void InitConstantBuffers(ID3D11Device *device);
+    void InitLightingPass(ID3D11Device *device);
 
     // geometry pass functions
     void SetPassState(ID3D11DeviceContext *context);

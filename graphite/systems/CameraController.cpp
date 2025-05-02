@@ -21,7 +21,7 @@ void CameraController::Update(float dt)
         // LOG_INFO(buf);
 
         float yaw = -md.x * m_lookSpeed;
-        float pitch = -md.y * m_lookSpeed;
+        float pitch = md.y * m_lookSpeed;
         m_Camera->Rotate(yaw, pitch);
     }
 

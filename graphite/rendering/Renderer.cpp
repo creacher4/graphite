@@ -176,12 +176,43 @@ void Renderer::Init(DeviceManager *deviceManager, HWND hwnd, UINT width, UINT he
     InitImGui(hwnd, device, context);
     InitShadersAndLayout(device);
     InitConstantBuffers(device);
+    InitLightingPass(device);
 
     if (!m_GBuffer.Init(device, width, height))
     {
         LOG_CRITICAL("Failed to initialize GBuffer");
     }
     LOG_INFO("Initialized GBuffer");
+}
+
+void Renderer::InitLightingPass(ID3D11Device *device)
+{
+    // compile full screen quad vertex shader
+    Microsoft::WRL::ComPtr<ID3DBlob> vsBlob;
+    CompileShaderFromFile(L"shaders/LightingVS.hlsl", "main", "vs_5_0", vsBlob);
+    HRESULT hr = device->CreateVertexShader(
+        vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(),
+        nullptr, m_vsLighting.GetAddressOf());
+    if (FAILED(hr))
+        LOG_CRITICAL("Failed to create lighting vertex shader");
+
+    // compile full screen quad pixel shader
+    Microsoft::WRL::ComPtr<ID3DBlob> psBlob;
+    CompileShaderFromFile(L"shaders/LightingPS.hlsl", "main", "ps_5_0", psBlob);
+    hr = device->CreatePixelShader(
+        psBlob->GetBufferPointer(), psBlob->GetBufferSize(),
+        nullptr, m_psLighting.GetAddressOf());
+    if (FAILED(hr))
+        LOG_CRITICAL("Failed to create lighting pixel shader");
+
+    // create constant buffer for directional light params
+    D3D11_BUFFER_DESC cbDesc = {};
+    cbDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+    cbDesc.ByteWidth = sizeof(DirectionalLightData);
+    cbDesc.Usage = D3D11_USAGE_DEFAULT;
+    hr = device->CreateBuffer(&cbDesc, nullptr, m_cbLight.GetAddressOf());
+    if (FAILED(hr))
+        LOG_CRITICAL("Failed to create directional light constant buffer");
 }
 
 void Renderer::UpdatePerFrameConstants(const glm::mat4 &view, const glm::mat4 &proj)
@@ -256,6 +287,39 @@ void Renderer::GeometryPass(ECSRegistry &registry, AssetManager &assets)
     }
 }
 
+void Renderer::LightingPass()
+{
+    auto *context = m_DeviceManager->GetContext();
+
+    context->RSSetState(m_rasterizerStateDefault.Get()); // reset rasterizer state
+    context->IASetInputLayout(nullptr);                  // unbind input layout
+    context->OMSetDepthStencilState(nullptr, 0);         // unbind depth stencil state
+
+    // bind gbuffer srvs
+    ID3D11ShaderResourceView *srvs[4] = {
+        m_GBuffer.GetAlbedoSRV(),
+        m_GBuffer.GetNormalSRV(),
+        m_GBuffer.GetOrmSRV(),
+        m_GBuffer.GetDepthSRV()};
+    context->PSSetShaderResources(0, 4, srvs);
+
+    // bind lighting shaders
+    context->VSSetShader(m_vsLighting.Get(), nullptr, 0);
+    context->PSSetShader(m_psLighting.Get(), nullptr, 0);
+
+    // bind lighting constant buffer
+    context->PSSetConstantBuffers(0, 1, m_cbLight.GetAddressOf());
+    context->PSSetSamplers(0, 1, m_samplerStateDefault.GetAddressOf());
+
+    // draw fullscreen quad
+    context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+    context->Draw(3, 0); // assuming a fullscreen quad is set up in the vertex buffer (which it is)
+
+    // unbind gbuffer srvs
+    ID3D11ShaderResourceView *nulls[4] = {nullptr, nullptr, nullptr, nullptr};
+    context->PSSetShaderResources(0, 4, nulls);
+}
+
 void Renderer::EndFrame(StatsSystem *stats)
 {
     // rebind back buffer
@@ -268,6 +332,16 @@ void Renderer::EndFrame(StatsSystem *stats)
     // this is why the window was black and multiple instances of the imgui window were appearing
     const float clearColor[4] = {0.2f, 0.2f, 0.2f, 1.0f};
     context->ClearRenderTargetView(backRTV, clearColor);
+
+    // build and upload light data
+    DirectionalLightData lightData{};
+    lightData.dir = glm::normalize(glm::vec3{0.2f, -1.0f, 0.3f});
+    lightData.color = glm::vec3{1.0f, 0.95f, 0.85f};
+    context->UpdateSubresource(
+        m_cbLight.Get(), 0, nullptr, &lightData, 0, 0);
+
+    // lighting pass
+    LightingPass();
 
     ImGui_ImplDX11_NewFrame();
     ImGui_ImplWin32_NewFrame();
@@ -307,7 +381,13 @@ void Renderer::EndFrame(StatsSystem *stats)
     if (srv)
     {
         ImTextureID texID = (ImTextureID)srv;
-        ImGui::Image(texID, ImGui::GetContentRegionAvail());
+        auto size = ImGui::GetContentRegionAvail();
+        ImGui::Image(
+            texID,
+            size,
+            ImVec2(0.0f, 1.0f), // top-left in UV space
+            ImVec2(1.0f, 0.0f)  // bottom-right in UV space
+        );
     }
     ImGui::End();
 
