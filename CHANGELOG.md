@@ -5,10 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [0.6.0] – 2025-05-02
 
 ### Added
 
+- Full-screen deferred lighting pass using `LightingVS.hlsl`/`LightingPS.hlsl` and a `Renderer::LightingPass()` method
+- `DirectionalLightData` constant buffer for directional light parameters
 - Modular engine setup helpers: `InitCamera`, `InitSystems` and `InitScene`
 - Refactored `AssetManager` to separate mesh processing and texture loading into focused internal helpers for better code clarity and reuse
 - Centralized logging system using a new `Logger` class backed by spdlog
@@ -28,6 +30,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ### Fixed
 
 - Renamed `ERROR` log level to `ERR` to avoid conflict with Windows macros
+- G-Buffer viewer now displays correctly with vertical UV flip in ImGui
+- `CameraController::Update` pitch direction corrected
 
 ## [0.5.0.2] – 2025-04-28
 
@@ -157,7 +161,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ### Fixed
 
 - Corrected matrix multiplication order in shaders
-- Prevented crashes from uninitialized GBuffer targets
+- Prevented crashes from uninitialized G-Buffer targets
 
 ## [0.1.0] – 2025-04-23
 
