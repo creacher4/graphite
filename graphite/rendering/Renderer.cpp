@@ -1,6 +1,7 @@
 #include "Renderer.h"
 #include "managers/DeviceManager.h"
 #include "ShaderUtils.h"
+#include <DirectXTK/DDSTextureLoader.h>
 #include <stdexcept>
 #include "ecs/RenderableComponent.h"
 #include "Material.h"
@@ -333,19 +334,50 @@ void Renderer::EndFrame(StatsSystem *stats)
     const float clearColor[4] = {0.2f, 0.2f, 0.2f, 1.0f};
     context->ClearRenderTargetView(backRTV, clearColor);
 
+    ImGui_ImplDX11_NewFrame();
+    ImGui_ImplWin32_NewFrame();
+    ImGui::NewFrame();
+
+    // debug ui toggles
+    static bool cbAlbedo = true;
+    static bool cbNormals = true;
+    static bool cbAO = true;
+    static bool cbRoughness = true;
+    static bool cbMetallic = true;
+    static bool cbFresnel = true;
+    static bool cbRim = true;
+
+    ImGui::Begin("Lighting Debug");
+    ImGui::Checkbox("Albedo", &cbAlbedo);
+    ImGui::Checkbox("Normals", &cbNormals);
+    ImGui::Checkbox("AO", &cbAO);
+    ImGui::Checkbox("Roughness", &cbRoughness);
+    ImGui::Checkbox("Metallic", &cbMetallic);
+    ImGui::Checkbox("Fresnel", &cbFresnel);
+    ImGui::Checkbox("Rim", &cbRim);
+    ImGui::End();
+
     // build and upload light data
     DirectionalLightData lightData{};
-    lightData.dir = glm::normalize(glm::vec3{0.2f, -1.0f, 0.3f});
+    lightData.dir = glm::normalize(glm::vec3{1.0f, -1.0f, 0.5f}); // from the top right
     lightData.color = glm::vec3{1.0f, 0.95f, 0.85f};
+    lightData.useAlbedo = cbAlbedo ? 1.0f : 0.0f;
+    lightData.useNormals = cbNormals ? 1.0f : 0.0f;
+    lightData.useAO = cbAO ? 1.0f : 0.0f;
+    lightData.viewDir = glm::vec3{0.0f, 0.0f, 1.0f}; // camera->GetForward();
+    lightData.useRoughness = cbRoughness ? 1.0f : 0.0f;
+    lightData.useMetallic = cbMetallic ? 1.0f : 0.0f;
+    lightData.useFresnel = cbFresnel ? 1.0f : 0.0f;
+    lightData.useRim = cbRim ? 1.0f : 0.0f;
     context->UpdateSubresource(
         m_cbLight.Get(), 0, nullptr, &lightData, 0, 0);
 
     // lighting pass
     LightingPass();
 
-    ImGui_ImplDX11_NewFrame();
-    ImGui_ImplWin32_NewFrame();
-    ImGui::NewFrame();
+    // ImGui_ImplDX11_NewFrame();
+    // ImGui_ImplWin32_NewFrame();
+    // ImGui::NewFrame();
 
     // GBUFFER viewer
     ImGui::Begin("GBuffer Viewer");
