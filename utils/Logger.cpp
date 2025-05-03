@@ -1,7 +1,5 @@
 #include "Logger.h"
-#include <spdlog/sinks/stdout_color_sinks.h>
 #include <cstdarg>
-#include <spdlog/common.h>
 #include <algorithm>
 #include <cctype>
 

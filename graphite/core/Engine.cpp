@@ -102,11 +102,11 @@ void Engine::InitScene()
     LOG_INFO("Initializing scene...");
     try
     {
-        AssetID modelPath = "assets/models/boulder/boulder_01_8k.gltf";
-        AssetID materialID = "assets/models/boulder/boulder_01_8k";
-        AssetID albedoPath = "assets/models/boulder/boulder_01_albedo.png";
-        AssetID normalPath = "assets/models/boulder/boulder_01_normals.png";
-        AssetID ormPath = "assets/models/boulder/boulder_01_orm.png";
+        AssetID modelPath = "assets/models/marble_bust/marble_bust_01_8k.gltf";
+        AssetID materialID = "assets/models/marble_bust/marble_bust_01_8k";
+        AssetID albedoPath = "assets/models/marble_bust/marble_bust_albedo.png";
+        AssetID normalPath = "assets/models/marble_bust/marble_bust_normals.png";
+        AssetID ormPath = "assets/models/marble_bust/marble_bust_orm.png";
 
         // load model
         if (!m_AssetManager->LoadModel(modelPath))
@@ -125,7 +125,10 @@ void Engine::InitScene()
 
         auto entity = m_Registry->CreateEntity();
         // set at origin with no rotation and scale of 1
-        TransformComponent t{glm::vec3{0, 0, 0}, {}, glm::vec3{1, 1, 1}};
+        TransformComponent t{};
+        t.position = glm::vec3(0, 0, 0);
+        t.rotation = glm::vec3(glm::pi<float>(), 0, 0);
+        t.scale = glm::vec3(1, 1, 1);
         m_Registry->AddComponent<TransformComponent>(entity, t);
         m_Registry->AddComponent<RenderableComponent>(entity, RenderableComponent{modelPath, materialID});
     }

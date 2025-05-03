@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+
+- Extended `DirectionalLightData` and HLSL cbuffer with new lighting controls
+- Debug UI toggles for Albedo, Normals, AO, Roughness, Metallic, Fresnel, and Rim
+- Blinn-Phong styled specular with Schlick Fresnel approximation and rim-lighting implementation in `LightingPS.hlsl`, sampling `ORM`
+
+### Changed
+
+- Updated default `lightDir` to point from top right
+- Cleaned up `CmakeLists.txt`
+
 ## [0.6.0] – 2025-05-02
 
 ### Added
