@@ -37,11 +37,17 @@ bool AssetManager::LoadTexture(
     int w, h, c;
     auto *data = LoadImageDataFromFile(path, w, h, c);
     if (!data)
-        return false;
+    {
+        LOG_CRITICAL("Failed to load texture data from file: {}", path.string());
+        throw std::runtime_error("Failed to load texture: " + path.string());
+    }
 
     TextureResource res;
     if (!CreateTextureAndSRV(w, h, DXGI_FORMAT_R8G8B8A8_UNORM, data, res))
-        return false;
+    {
+        LOG_CRITICAL("Failed to create texture and SRV");
+        throw std::runtime_error("Failed to create texture and SRV: " + path.string());
+    }
 
     m_Textures[path] = std::move(res);
     return true;
@@ -62,8 +68,8 @@ bool AssetManager::LoadModel(
 
     if (!scene || !scene->HasMeshes())
     {
-        LOG_ERROR("Failed to load model");
-        return false;
+        LOG_CRITICAL("AssetManager Failed to load model: {}", path.string());
+        throw std::runtime_error("Failed to load model: " + path.string());
     }
 
     aiMesh *mesh = scene->mMeshes[0]; // take first mesh for simplicity
@@ -72,15 +78,15 @@ bool AssetManager::LoadModel(
 
     if (!ProcessAssimpMesh(mesh, vertices, indices))
     {
-        LOG_ERROR("Failed to process mesh");
-        return false;
+        LOG_CRITICAL("AssetManager Failed to process mesh: {}", path.string());
+        throw std::runtime_error("Failed to process mesh: " + path.string());
     }
 
     MeshResource mr;
     if (!CreateMeshResourceBuffers(vertices, indices, mr))
     {
-        LOG_ERROR("Failed to create mesh resource buffers");
-        return false;
+        LOG_CRITICAL("AssetManager Failed to create mesh resource buffers: {}", path.string());
+        throw std::runtime_error("Failed to create mesh resource buffers: " + path.string());
     }
 
     m_Meshes[path] = std::move(mr);

@@ -7,6 +7,21 @@
 #include <sstream>
 #include <glm/gtc/matrix_transform.hpp>
 
+namespace
+{
+    // model & texture asset IDs
+    inline const AssetID MODEL_PATH = "assets/models/marble_bust/marble_bust_01_8k.gltf";
+    inline const AssetID MATERIAL_ID = "assets/models/marble_bust/marble_bust_01_8k";
+    inline const AssetID ALBEDO_PATH = "assets/models/marble_bust/marble_bust_albedo.png";
+    inline const AssetID NORMAL_PATH = "assets/models/marble_bust/marble_bust_normals.png";
+    inline const AssetID ORM_PATH = "assets/models/marble_bust/marble_bust_orm.png";
+
+    // default camera settings
+    inline constexpr float DEFAULT_FOV_Y_RAD = glm::radians(45.0f);
+    inline constexpr float DEFAULT_NEAR_Z = 0.1f;
+    inline constexpr float DEFAULT_FAR_Z = 100.0f;
+}
+
 void Engine::Init(HWND hwnd, UINT width, UINT height)
 {
     // used elsewhere for window resizing
@@ -52,10 +67,10 @@ void Engine::InitCamera(UINT width, UINT height)
         glm::vec3(0, 0, 0),  // center
         glm::vec3(0, 1, 0)); // up
     m_Camera->SetPerspective(
-        glm::radians(45.0f),          // fovY
+        DEFAULT_FOV_Y_RAD,
         float(width) / float(height), // aspect
-        0.1f,                         // nearZ
-        100.0f);                      // farZ
+        DEFAULT_NEAR_Z,
+        DEFAULT_FAR_Z);
 }
 
 void Engine::InitSystems(HWND hwnd)
@@ -102,11 +117,11 @@ void Engine::InitScene()
     LOG_INFO("Initializing scene...");
     try
     {
-        AssetID modelPath = "assets/models/marble_bust/marble_bust_01_8k.gltf";
-        AssetID materialID = "assets/models/marble_bust/marble_bust_01_8k";
-        AssetID albedoPath = "assets/models/marble_bust/marble_bust_albedo.png";
-        AssetID normalPath = "assets/models/marble_bust/marble_bust_normals.png";
-        AssetID ormPath = "assets/models/marble_bust/marble_bust_orm.png";
+        AssetID modelPath = MODEL_PATH;
+        AssetID materialID = MATERIAL_ID;
+        AssetID albedoPath = ALBEDO_PATH;
+        AssetID normalPath = NORMAL_PATH;
+        AssetID ormPath = ORM_PATH;
 
         // load model
         if (!m_AssetManager->LoadModel(modelPath))

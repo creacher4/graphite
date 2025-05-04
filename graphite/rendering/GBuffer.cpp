@@ -114,12 +114,16 @@ void GBuffer::Bind(ID3D11DeviceContext *context)
 
 void GBuffer::Clear(ID3D11DeviceContext *context)
 {
-    float clearAlbedo[4] = {0.2f, 0.2f, 0.2f, 1.0f};
-    float clearNormal[4] = {0.5f, 0.5f, 1.0f, 1.0f}; // encoded (0, 0, 1)
-    float clearORM[4] = {0.8f, 0.8f, 0.0f, 1.0f};
-
-    context->ClearRenderTargetView(m_rtvAlbedo.Get(), clearAlbedo);
-    context->ClearRenderTargetView(m_rtvNormal.Get(), clearNormal);
-    context->ClearRenderTargetView(m_rtvORM.Get(), clearORM);
+    context->ClearRenderTargetView(m_rtvAlbedo.Get(), CLEAR_ALBEDO.data());
+    context->ClearRenderTargetView(m_rtvNormal.Get(), CLEAR_NORMAL.data());
+    context->ClearRenderTargetView(m_rtvORM.Get(), CLEAR_ORM.data());
     context->ClearDepthStencilView(m_depthDSV.Get(), D3D11_CLEAR_DEPTH, 1.0f, 0);
+}
+
+void GBuffer::Resize(ID3D11Device *device, UINT width, UINT height)
+{
+    if (!Init(device, width, height))
+    {
+        LOG_CRITICAL("Failed to resize GBuffer");
+    }
 }

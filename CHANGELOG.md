@@ -5,18 +5,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [0.6.1] – 2025-05-05
 
 ### Added
 
 - Extended `DirectionalLightData` and HLSL cbuffer with new lighting controls
 - Debug UI toggles for Albedo, Normals, AO, Roughness, Metallic, Fresnel, and Rim
 - Blinn-Phong styled specular with Schlick Fresnel approximation and rim-lighting implementation in `LightingPS.hlsl`, sampling `ORM`
+- Runtime shader compilation checks and error handling in `Renderer::InitShadersAndLayout`
+- Failure checks and exceptions for `AssetManager::LoadTexture` and `LoadModel`
+- Dedicated `GBuffer::Resize` helper used in `Renderer::OnResize`
+- Centralized ImGui style configuration into `ImGuiConfig.h`
 
 ### Changed
 
 - Updated default `lightDir` to point from top right
 - Cleaned up `CmakeLists.txt`
+- Replaced "magic" numbers in `CameraController` and camera setup with named constants
+- Centralized G-Buffer clear colors into `GBuffer` constants
+- Centralized asset paths in `Engine::InitScene`
+- Centralized default window size and title in `Application`
+- Moved log file path and default log level into `main.cpp` constants
+- Centralized all HLSL file paths in `Renderer.cpp`
+- Replaced hardcoded view direction in lighting pass with camera forward vector
 
 ## [0.6.0] – 2025-05-02
 

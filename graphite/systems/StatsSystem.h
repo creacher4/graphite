@@ -1,11 +1,11 @@
 #pragma once
 
 #include "core/ISystem.h"
+#include "rendering/Camera.h"
 #include <glm/vec3.hpp>
 #include <string>
 
 class RenderSystem;
-class Camera;
 
 class StatsSystem : public ISystem
 {
@@ -18,6 +18,11 @@ public:
 
     void SetRenderSystem(RenderSystem *renderSystem) { m_renderSystem = renderSystem; }
     void SetCamera(Camera *camera) { m_camera = camera; }
+
+    glm::vec3 GetViewDir() const
+    {
+        return m_camera ? m_camera->GetForward() : glm::vec3(0.f, 0.f, 1.f);
+    }
 
 private:
     RenderSystem *m_renderSystem = nullptr;

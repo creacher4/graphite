@@ -3,6 +3,13 @@
 
 #include <Windows.h>
 
+namespace
+{
+    // logging cfg
+    static constexpr const char LOG_FILE_PATH[] = "logs/Graphite.log";
+    static constexpr LogLevel DEFAULT_LOG_LEVEL = LogLevel::DEBUG;
+}
+
 int WINAPI WinMain(
     HINSTANCE hInstance,
     HINSTANCE hPrevInstance,
@@ -11,7 +18,7 @@ int WINAPI WinMain(
 {
     (void)hPrevInstance;
 
-    Logger::Init(LogLevel::DEBUG, "logs/Graphite.log");
+    Logger::Init(DEFAULT_LOG_LEVEL, LOG_FILE_PATH);
     LOG_INFO("Starting up Graphite...");
 
     try

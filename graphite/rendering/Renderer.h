@@ -10,6 +10,7 @@
 #include <d3d11.h>
 #include <wrl/client.h>
 #include <glm/glm.hpp>
+#include <array>
 
 class DeviceManager;
 struct Material;
@@ -94,6 +95,8 @@ private:
     // bla bla
     int m_drawCallCount = 0;
     int m_triangleCount = 0;
+
+    inline static constexpr std::array<float, 4> BACKBUFFER_CLEAR_COLOR = {0.2f, 0.2f, 0.2f, 1.0f};
 
     // helpers
 
