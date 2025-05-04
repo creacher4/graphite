@@ -1,9 +1,22 @@
 #include "Application.h"
 #include <chrono>
+#include <string>
+
+namespace
+{
+    // window config defaults
+    static constexpr int DEFAULT_WINDOW_WIDTH = 1280;
+    static constexpr int DEFAULT_WINDOW_HEIGHT = 720;
+    static const std::wstring DEFAULT_WINDOW_TITLE{L"Graphite"};
+}
 
 Application::Application(HINSTANCE hInstance)
 {
-    m_Window = std::make_unique<PlatformWindow>(hInstance, 1280, 720, L"Graphite");
+    m_Window = std::make_unique<PlatformWindow>(
+        hInstance,
+        DEFAULT_WINDOW_WIDTH,
+        DEFAULT_WINDOW_HEIGHT,
+        DEFAULT_WINDOW_TITLE);
     m_Engine = std::make_unique<Engine>();
     m_Engine->Init(
         m_Window->GetHWND(),

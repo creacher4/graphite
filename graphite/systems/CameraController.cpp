@@ -20,8 +20,8 @@ void CameraController::Update(float dt)
         // sprintf(buf, ">> MouseDelta = %d, %d\n", md.x, md.y);
         // LOG_INFO(buf);
 
-        float yaw = -md.x * m_lookSpeed;
-        float pitch = md.y * m_lookSpeed;
+        float yaw = -md.x * LOOK_SPEED;
+        float pitch = md.y * LOOK_SPEED;
         m_Camera->Rotate(yaw, pitch);
     }
 
@@ -43,6 +43,6 @@ void CameraController::Update(float dt)
             m_Camera->GetRight() * move.x +
             m_Camera->GetForward() * move.z; // no y component for now
 
-        m_Camera->Translate(worldMove * m_moveSpeed * dt);
+        m_Camera->Translate(worldMove * MOVE_SPEED * dt);
     }
 }

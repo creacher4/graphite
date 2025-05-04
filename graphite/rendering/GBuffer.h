@@ -3,6 +3,7 @@
 #include <d3d11.h>
 #include <wrl/client.h>
 #include <vector>
+#include <array>
 
 class GBuffer
 {
@@ -51,4 +52,9 @@ private:
     Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> m_srvDepth;
 
     std::vector<ID3D11RenderTargetView *> m_renderTargetViews;
+
+    // named clear colors
+    inline static constexpr std::array<float, 4> CLEAR_ALBEDO = {0.2f, 0.2f, 0.2f, 1.0f};
+    inline static constexpr std::array<float, 4> CLEAR_NORMAL = {0.5f, 0.5f, 1.0f, 1.0f};
+    inline static constexpr std::array<float, 4> CLEAR_ORM = {0.8f, 0.8f, 0.0f, 1.0f};
 };

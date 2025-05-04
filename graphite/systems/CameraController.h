@@ -15,6 +15,9 @@ public:
 
 private:
     Camera *m_Camera = nullptr;
-    float m_moveSpeed = 5.0f;   // units per second
-    float m_lookSpeed = 0.002f; // radians per pixel
+    // float m_moveSpeed = 5.0f;   // units per second
+    // float m_lookSpeed = 0.002f; // radians per pixel
+
+    static constexpr float MOVE_SPEED = 5.0f;   // units per second
+    static constexpr float LOOK_SPEED = 0.002f; // radians per pixel
 };

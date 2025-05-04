@@ -9,9 +9,19 @@
 #include "Logger.h"
 #include "ConstantBuffers.h"
 #include <glm/gtc/matrix_transform.hpp>
+#include "utils/ImGuiConfig.h"
 #include <imgui.h>
 #include <imgui_impl_win32.h>
 #include <imgui_impl_dx11.h>
+
+namespace
+{
+    // shader file paths
+    static constexpr const wchar_t *GEOMETRY_VS_FILE = L"shaders/GeometryVS.hlsl";
+    static constexpr const wchar_t *GEOMETRY_PS_FILE = L"shaders/GeometryPS.hlsl";
+    static constexpr const wchar_t *LIGHTING_VS_FILE = L"shaders/LightingVS.hlsl";
+    static constexpr const wchar_t *LIGHTING_PS_FILE = L"shaders/LightingPS.hlsl";
+}
 
 Renderer::~Renderer()
 {
@@ -89,6 +99,7 @@ void Renderer::InitImGui(HWND hwnd, ID3D11Device *device, ID3D11DeviceContext *c
     ImGuiIO &io = ImGui::GetIO();
     (void)io;
     ImGui::StyleColorsDark();
+    ImGuiConfig::ConfigureStyle();
 
     ImGui_ImplWin32_Init(hwnd);
     ImGui_ImplDX11_Init(device, context);
@@ -100,25 +111,35 @@ void Renderer::InitShadersAndLayout(ID3D11Device *device)
 
     // compile geometry vertex shader
     Microsoft::WRL::ComPtr<ID3DBlob> vsBlob;
-    CompileShaderFromFile(L"shaders/GeometryVS.hlsl", "main", "vs_5_0", vsBlob);
+    if (!CompileShaderFromFile(GEOMETRY_VS_FILE, "main", "vs_5_0", vsBlob))
+    {
+        LOG_CRITICAL("Failed to compile geometry vertex shader");
+        throw std::runtime_error("Failed to compile geometry vertex shader");
+    };
     hr = device->CreateVertexShader(
         vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(),
         nullptr, m_vsGeometry.GetAddressOf());
     if (FAILED(hr))
     {
         LOG_CRITICAL("Failed to create geometry vertex shader");
+        throw std::runtime_error("Failed to create geometry vertex shader");
     }
     LOG_INFO("Created geometry vertex shader");
 
     // compile geometry pixel shader
     Microsoft::WRL::ComPtr<ID3DBlob> psBlob;
-    CompileShaderFromFile(L"shaders/GeometryPS.hlsl", "main", "ps_5_0", psBlob);
+    if (!CompileShaderFromFile(GEOMETRY_PS_FILE, "main", "ps_5_0", psBlob))
+    {
+        LOG_CRITICAL("Failed to compile geometry pixel shader");
+        throw std::runtime_error("Failed to compile geometry pixel shader");
+    };
     hr = device->CreatePixelShader(
         psBlob->GetBufferPointer(), psBlob->GetBufferSize(),
         nullptr, m_psGeometry.GetAddressOf());
     if (FAILED(hr))
     {
         LOG_CRITICAL("Failed to create geometry pixel shader");
+        throw std::runtime_error("Failed to create geometry pixel shader");
     }
     LOG_INFO("Created geometry pixel shader");
 
@@ -190,7 +211,7 @@ void Renderer::InitLightingPass(ID3D11Device *device)
 {
     // compile full screen quad vertex shader
     Microsoft::WRL::ComPtr<ID3DBlob> vsBlob;
-    CompileShaderFromFile(L"shaders/LightingVS.hlsl", "main", "vs_5_0", vsBlob);
+    CompileShaderFromFile(LIGHTING_VS_FILE, "main", "vs_5_0", vsBlob);
     HRESULT hr = device->CreateVertexShader(
         vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(),
         nullptr, m_vsLighting.GetAddressOf());
@@ -199,7 +220,7 @@ void Renderer::InitLightingPass(ID3D11Device *device)
 
     // compile full screen quad pixel shader
     Microsoft::WRL::ComPtr<ID3DBlob> psBlob;
-    CompileShaderFromFile(L"shaders/LightingPS.hlsl", "main", "ps_5_0", psBlob);
+    CompileShaderFromFile(LIGHTING_PS_FILE, "main", "ps_5_0", psBlob);
     hr = device->CreatePixelShader(
         psBlob->GetBufferPointer(), psBlob->GetBufferSize(),
         nullptr, m_psLighting.GetAddressOf());
@@ -233,11 +254,7 @@ void Renderer::OnResize(UINT width, UINT height)
 {
     // reinitialize just the GBuffer
     auto *device = m_DeviceManager->GetDevice();
-    auto *context = m_DeviceManager->GetContext();
-    if (!m_GBuffer.Init(device, width, height))
-    {
-        LOG_CRITICAL("Failed to reinitialize GBuffer on resize");
-    }
+    m_GBuffer.Resize(device, width, height);
 }
 
 void Renderer::BeginFrame()
@@ -329,10 +346,7 @@ void Renderer::EndFrame(StatsSystem *stats)
     context->OMSetRenderTargets(1, &backRTV, nullptr);
 
     // clear back buffer
-    // completely forgot about this, lol
-    // this is why the window was black and multiple instances of the imgui window were appearing
-    const float clearColor[4] = {0.2f, 0.2f, 0.2f, 1.0f};
-    context->ClearRenderTargetView(backRTV, clearColor);
+    context->ClearRenderTargetView(backRTV, BACKBUFFER_CLEAR_COLOR.data());
 
     ImGui_ImplDX11_NewFrame();
     ImGui_ImplWin32_NewFrame();
@@ -364,7 +378,7 @@ void Renderer::EndFrame(StatsSystem *stats)
     lightData.useAlbedo = cbAlbedo ? 1.0f : 0.0f;
     lightData.useNormals = cbNormals ? 1.0f : 0.0f;
     lightData.useAO = cbAO ? 1.0f : 0.0f;
-    lightData.viewDir = glm::vec3{0.0f, 0.0f, 1.0f}; // camera->GetForward();
+    lightData.viewDir = stats->GetViewDir();
     lightData.useRoughness = cbRoughness ? 1.0f : 0.0f;
     lightData.useMetallic = cbMetallic ? 1.0f : 0.0f;
     lightData.useFresnel = cbFresnel ? 1.0f : 0.0f;
