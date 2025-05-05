@@ -6,6 +6,7 @@
 #include "managers/AssetManager.h"
 #include "systems/StatsSystem.h"
 #include "ecs/TransformComponent.h"
+#include "rendering/Lighting.h"
 #include <Windows.h>
 #include <d3d11.h>
 #include <wrl/client.h>
@@ -15,34 +16,6 @@
 class DeviceManager;
 struct Material;
 struct Mesh;
-
-// defining directional light structure here for now
-struct DirectionalLightData
-{
-    // slot 0
-    glm::vec3 dir;
-    float pad0;
-
-    // slot 1
-    glm::vec3 color;
-    float useAlbedo;
-
-    // slot 2
-    float useNormals;
-    float useAO;
-    float pad1;
-    float pad2;
-
-    // slot 3
-    glm::vec3 viewDir;
-    float useRoughness;
-
-    // slot 4
-    float useMetallic;
-    float useFresnel;
-    float useRim;
-    float pad3;
-};
 
 class Renderer
 {
@@ -101,11 +74,11 @@ private:
     // helpers
 
     // initialization functions
-    void InitStateObjects(ID3D11Device *device);
+    // void InitStateObjects(ID3D11Device *device);
     void InitImGui(HWND hwnd, ID3D11Device *device, ID3D11DeviceContext *context);
-    void InitShadersAndLayout(ID3D11Device *device);
+    // void InitShadersAndLayout(ID3D11Device *device);
     void InitConstantBuffers(ID3D11Device *device);
-    void InitLightingPass(ID3D11Device *device);
+    // void InitLightingPass(ID3D11Device *device);
 
     // geometry pass functions
     void SetPassState(ID3D11DeviceContext *context);

@@ -1,9 +1,9 @@
 #include "Renderer.h"
 #include "managers/DeviceManager.h"
-#include "ShaderUtils.h"
 #include <DirectXTK/DDSTextureLoader.h>
 #include <stdexcept>
 #include "ecs/RenderableComponent.h"
+#include "RendererSetup.h"
 #include "Material.h"
 #include "Vertex.h"
 #include "Logger.h"
@@ -14,82 +14,11 @@
 #include <imgui_impl_win32.h>
 #include <imgui_impl_dx11.h>
 
-namespace
-{
-    // shader file paths
-    static constexpr const wchar_t *GEOMETRY_VS_FILE = L"shaders/GeometryVS.hlsl";
-    static constexpr const wchar_t *GEOMETRY_PS_FILE = L"shaders/GeometryPS.hlsl";
-    static constexpr const wchar_t *LIGHTING_VS_FILE = L"shaders/LightingVS.hlsl";
-    static constexpr const wchar_t *LIGHTING_PS_FILE = L"shaders/LightingPS.hlsl";
-}
-
 Renderer::~Renderer()
 {
     ImGui_ImplDX11_Shutdown();
     ImGui_ImplWin32_Shutdown();
     ImGui::DestroyContext();
-}
-
-void Renderer::InitStateObjects(ID3D11Device *device)
-{
-    HRESULT hr;
-
-    // default rasterizer state
-    D3D11_RASTERIZER_DESC rasterDesc = {};
-    rasterDesc.FillMode = D3D11_FILL_SOLID;
-    rasterDesc.CullMode = D3D11_CULL_BACK;
-    rasterDesc.FrontCounterClockwise = FALSE;
-    rasterDesc.DepthClipEnable = TRUE;
-    hr = device->CreateRasterizerState(
-        &rasterDesc,
-        m_rasterizerStateDefault.GetAddressOf());
-    if (FAILED(hr))
-    {
-        LOG_ERROR("Failed to create default rasterizer state");
-    }
-    LOG_INFO("Created default rasterizer state");
-
-    // wireframe rasterizer state
-    D3D11_RASTERIZER_DESC wfDesc = rasterDesc;
-    wfDesc.FillMode = D3D11_FILL_WIREFRAME;
-    wfDesc.CullMode = D3D11_CULL_NONE;
-    hr = device->CreateRasterizerState(
-        &wfDesc,
-        m_rasterizerStateWire_NoCull.GetAddressOf());
-    if (FAILED(hr))
-    {
-        LOG_ERROR("Failed to create wireframe rasterizer state");
-    }
-    LOG_INFO("Created wireframe rasterizer state");
-
-    // depth stencil state
-    D3D11_DEPTH_STENCIL_DESC depthDesc = {};
-    depthDesc.DepthEnable = TRUE;
-    depthDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
-    depthDesc.DepthFunc = D3D11_COMPARISON_LESS;
-    hr = device->CreateDepthStencilState(
-        &depthDesc,
-        m_depthStencilStateDefault.GetAddressOf());
-    if (FAILED(hr))
-    {
-        LOG_ERROR("Failed to create depth stencil state");
-    }
-    LOG_INFO("Created default depth stencil state");
-
-    // sampler state
-    D3D11_SAMPLER_DESC samplerDesc = {};
-    samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
-    samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
-    samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
-    samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
-    hr = device->CreateSamplerState(
-        &samplerDesc,
-        m_samplerStateDefault.GetAddressOf());
-    if (FAILED(hr))
-    {
-        LOG_ERROR("Failed to create default sampler state");
-    }
-    LOG_INFO("Created default sampler state");
 }
 
 void Renderer::InitImGui(HWND hwnd, ID3D11Device *device, ID3D11DeviceContext *context)
@@ -103,61 +32,6 @@ void Renderer::InitImGui(HWND hwnd, ID3D11Device *device, ID3D11DeviceContext *c
 
     ImGui_ImplWin32_Init(hwnd);
     ImGui_ImplDX11_Init(device, context);
-}
-
-void Renderer::InitShadersAndLayout(ID3D11Device *device)
-{
-    HRESULT hr;
-
-    // compile geometry vertex shader
-    Microsoft::WRL::ComPtr<ID3DBlob> vsBlob;
-    if (!CompileShaderFromFile(GEOMETRY_VS_FILE, "main", "vs_5_0", vsBlob))
-    {
-        LOG_CRITICAL("Failed to compile geometry vertex shader");
-        throw std::runtime_error("Failed to compile geometry vertex shader");
-    };
-    hr = device->CreateVertexShader(
-        vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(),
-        nullptr, m_vsGeometry.GetAddressOf());
-    if (FAILED(hr))
-    {
-        LOG_CRITICAL("Failed to create geometry vertex shader");
-        throw std::runtime_error("Failed to create geometry vertex shader");
-    }
-    LOG_INFO("Created geometry vertex shader");
-
-    // compile geometry pixel shader
-    Microsoft::WRL::ComPtr<ID3DBlob> psBlob;
-    if (!CompileShaderFromFile(GEOMETRY_PS_FILE, "main", "ps_5_0", psBlob))
-    {
-        LOG_CRITICAL("Failed to compile geometry pixel shader");
-        throw std::runtime_error("Failed to compile geometry pixel shader");
-    };
-    hr = device->CreatePixelShader(
-        psBlob->GetBufferPointer(), psBlob->GetBufferSize(),
-        nullptr, m_psGeometry.GetAddressOf());
-    if (FAILED(hr))
-    {
-        LOG_CRITICAL("Failed to create geometry pixel shader");
-        throw std::runtime_error("Failed to create geometry pixel shader");
-    }
-    LOG_INFO("Created geometry pixel shader");
-
-    // create input layout
-    D3D11_INPUT_ELEMENT_DESC layoutDesc[] = {
-        {"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0},
-        {"NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0},
-        {"TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 24, D3D11_INPUT_PER_VERTEX_DATA, 0},
-        {"TANGENT", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 32, D3D11_INPUT_PER_VERTEX_DATA, 0}};
-    hr = device->CreateInputLayout(
-        layoutDesc, ARRAYSIZE(layoutDesc),
-        vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(),
-        m_inputLayout.GetAddressOf());
-    if (FAILED(hr))
-    {
-        LOG_CRITICAL("Failed to create input layout");
-    }
-    LOG_INFO("Created input layout");
 }
 
 void Renderer::InitConstantBuffers(ID3D11Device *device)
@@ -194,47 +68,48 @@ void Renderer::Init(DeviceManager *deviceManager, HWND hwnd, UINT width, UINT he
     auto *device = deviceManager->GetDevice();
     auto *context = deviceManager->GetContext();
 
-    InitStateObjects(device);
+    RendererSetup::InitStateObjects(
+        device,
+        m_rasterizerStateDefault,
+        m_rasterizerStateWire_NoCull,
+        m_depthStencilStateDefault,
+        m_samplerStateDefault);
+
     InitImGui(hwnd, device, context);
-    InitShadersAndLayout(device);
+
+    RendererSetup::InitGeometryShadersAndLayout(
+        device,
+        hwnd,
+        m_vsGeometry,
+        m_psGeometry,
+        m_inputLayout);
+
     InitConstantBuffers(device);
-    InitLightingPass(device);
+
+    RendererSetup::InitLightingShaders(
+        device,
+        m_vsLighting,
+        m_psLighting);
+
+    {
+        // create lighting cb
+        D3D11_BUFFER_DESC cbDesc = {};
+        cbDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+        cbDesc.ByteWidth = sizeof(DirectionalLightData);
+        cbDesc.Usage = D3D11_USAGE_DEFAULT;
+        HRESULT hr = device->CreateBuffer(&cbDesc, nullptr, m_cbLight.GetAddressOf());
+        if (FAILED(hr))
+        {
+            LOG_CRITICAL("Failed to create directional light constant buffer");
+        }
+        LOG_INFO("Created directional light constant buffer");
+    }
 
     if (!m_GBuffer.Init(device, width, height))
     {
         LOG_CRITICAL("Failed to initialize GBuffer");
     }
     LOG_INFO("Initialized GBuffer");
-}
-
-void Renderer::InitLightingPass(ID3D11Device *device)
-{
-    // compile full screen quad vertex shader
-    Microsoft::WRL::ComPtr<ID3DBlob> vsBlob;
-    CompileShaderFromFile(LIGHTING_VS_FILE, "main", "vs_5_0", vsBlob);
-    HRESULT hr = device->CreateVertexShader(
-        vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(),
-        nullptr, m_vsLighting.GetAddressOf());
-    if (FAILED(hr))
-        LOG_CRITICAL("Failed to create lighting vertex shader");
-
-    // compile full screen quad pixel shader
-    Microsoft::WRL::ComPtr<ID3DBlob> psBlob;
-    CompileShaderFromFile(LIGHTING_PS_FILE, "main", "ps_5_0", psBlob);
-    hr = device->CreatePixelShader(
-        psBlob->GetBufferPointer(), psBlob->GetBufferSize(),
-        nullptr, m_psLighting.GetAddressOf());
-    if (FAILED(hr))
-        LOG_CRITICAL("Failed to create lighting pixel shader");
-
-    // create constant buffer for directional light params
-    D3D11_BUFFER_DESC cbDesc = {};
-    cbDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-    cbDesc.ByteWidth = sizeof(DirectionalLightData);
-    cbDesc.Usage = D3D11_USAGE_DEFAULT;
-    hr = device->CreateBuffer(&cbDesc, nullptr, m_cbLight.GetAddressOf());
-    if (FAILED(hr))
-        LOG_CRITICAL("Failed to create directional light constant buffer");
 }
 
 void Renderer::UpdatePerFrameConstants(const glm::mat4 &view, const glm::mat4 &proj)
@@ -273,35 +148,38 @@ void Renderer::GeometryPass(ECSRegistry &registry, AssetManager &assets)
     SetPassState(context);
 
     // loop through entities and draw
-    auto view = registry.View<TransformComponent, RenderableComponent>();
-    for (auto [ent, transform, meshComp] : view.each())
+    auto view = registry.View<RenderableComponent, TransformComponent>();
+    for (auto [ent, rc, tc] : view.each())
     {
-        // fetch mesh and material
-        auto *mesh = assets.GetMesh(meshComp.meshID);
-        auto *material = assets.GetMaterial(meshComp.materialID);
+        // fetch model
+        auto *model = assets.GetModel(rc.modelID);
+        if (!model)
+        {
+            LOG_WARN("Skipping entity {} due to missing model", ent);
+            continue;
+        }
+
+        // clamp index
+        size_t index = std::min(rc.subMeshIndex, model->meshes.size() - 1);
+        const auto &mesh = model->meshes[index];
+
+        // fetch material
+        auto *material = assets.GetMaterial(rc.materialID);
         if (!material)
         {
             LOG_WARN("Skipping entity {} due to missing material", ent);
             continue;
         }
-        if (!mesh || !mesh->vertexBuffer || !mesh->indexBuffer || mesh->indexCount == 0)
-        {
-            if (!mesh)
-                LOG_WARN("Skipping entity {} due to missing mesh", ent);
-            else
-                LOG_WARN("Skipping entity {} due to invalid mesh buffers", ent);
-            continue;
-        }
 
-        // if here, mesh and materials are valid
-        UpdatePerObjectConstantBuffer(context, transform);
+        // if here, model and materials are valid
+        UpdatePerObjectConstantBuffer(context, tc);
         BindMaterial(context, assets, material);
-        DrawMesh(context, mesh); // draw call
-        UnbindMaterial(context); // helpful unbind in case its used again
+        DrawMesh(context, &mesh); // draw call
+        UnbindMaterial(context);  // helpful unbind in case its used again
 
         // update stats
         m_drawCallCount++;
-        m_triangleCount += mesh->indexCount / 3;
+        m_triangleCount += mesh.indexCount / 3;
     }
 }
 
@@ -309,9 +187,9 @@ void Renderer::LightingPass()
 {
     auto *context = m_DeviceManager->GetContext();
 
-    context->RSSetState(m_rasterizerStateDefault.Get()); // reset rasterizer state
-    context->IASetInputLayout(nullptr);                  // unbind input layout
-    context->OMSetDepthStencilState(nullptr, 0);         // unbind depth stencil state
+    context->RSSetState(m_rasterizerStateDefault.Get());
+    context->IASetInputLayout(nullptr);
+    context->OMSetDepthStencilState(nullptr, 0);
 
     // bind gbuffer srvs
     ID3D11ShaderResourceView *srvs[4] = {

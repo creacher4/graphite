@@ -1,28 +1,23 @@
 #pragma once
 
 #include "core/ISystem.h"
-#include "rendering/Camera.h"
+// #include "rendering/Camera.h"
 #include <glm/vec3.hpp>
 #include <string>
 
 class RenderSystem;
+class Camera;
 
 class StatsSystem : public ISystem
 {
 public:
+    StatsSystem(RenderSystem *renderSystem, Camera *camera);
     void Init() override;
     void Update(float deltaTime) override;
     void Shutdown() override;
-
     void DrawImGui();
 
-    void SetRenderSystem(RenderSystem *renderSystem) { m_renderSystem = renderSystem; }
-    void SetCamera(Camera *camera) { m_camera = camera; }
-
-    glm::vec3 GetViewDir() const
-    {
-        return m_camera ? m_camera->GetForward() : glm::vec3(0.f, 0.f, 1.f);
-    }
+    glm::vec3 GetViewDir() const;
 
 private:
     RenderSystem *m_renderSystem = nullptr;

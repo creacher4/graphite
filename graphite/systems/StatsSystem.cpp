@@ -1,11 +1,15 @@
 #include "StatsSystem.h"
+#include "systems/RenderSystem.h"
+#include "rendering/Camera.h"
+#include "input/InputManager.h"
 #include <imgui.h>
 #include <Windows.h>
 #include <cmath>
 
-#include "systems/RenderSystem.h"
-#include "rendering/Camera.h"
-#include "input/InputManager.h"
+StatsSystem::StatsSystem(RenderSystem *renderSystem, Camera *camera)
+    : m_renderSystem(renderSystem), m_camera(camera)
+{
+}
 
 void StatsSystem::Init()
 {
@@ -67,4 +71,9 @@ void StatsSystem::DrawImGui()
     }
 
     ImGui::End();
+}
+
+glm::vec3 StatsSystem::GetViewDir() const
+{
+    return m_camera ? m_camera->GetForward() : glm::vec3(0.f, 0.f, 1.f);
 }

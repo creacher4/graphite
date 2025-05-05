@@ -31,6 +31,11 @@ public:
         UINT width = 0, height = 0;
     };
 
+    struct ModelResource
+    {
+        std::vector<MeshResource> meshes;
+    };
+
     AssetManager() = default;
     ~AssetManager() = default;
 
@@ -42,6 +47,7 @@ public:
 
     const MeshResource *GetMesh(const AssetID &id) const;
     const TextureResource *GetTexture(const AssetID &id) const;
+    const ModelResource *GetModel(const AssetID &id) const;
     const Material *GetMaterial(const AssetID &id) const;
     // const MeshResource *GetMesh(const std::string &id);
 
@@ -51,6 +57,7 @@ public:
 private:
     DeviceManager *m_DeviceManager = nullptr;
     std::map<AssetID, MeshResource> m_Meshes;
+    std::map<AssetID, ModelResource> m_Models;
     std::map<AssetID, TextureResource> m_Textures;
     std::map<AssetID, Material> m_Materials;
 

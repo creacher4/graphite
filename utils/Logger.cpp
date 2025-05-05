@@ -11,9 +11,9 @@ void Logger::Init(LogLevel level, const std::string &logFilePath)
     // create file sink
     auto fileSink = std::make_shared<spdlog::sinks::basic_file_sink_mt>(logFilePath, true);
 
-    // [2023-10-01T12:34:56.789] [1234] | INFO | This is a log message
+    // [2023-10-01T12:34:56.789] [12345] | [level] | message
     fileSink->set_pattern(
-        "[%Y-%m-%dT%H:%M:%S.%e] [%P] %v");
+        "[%Y-%m-%dT%H:%M:%S.%e] [%P] | [%^%l%$] | %v");
 
     // register logger with sinks
     s_Logger = std::make_shared<spdlog::logger>(
@@ -60,21 +60,14 @@ void Logger::Log(LogLevel level, const char *file, int line, const char *fmt, ..
     if (!s_Logger)
         return;
 
-    char buffer[1024];
     va_list args;
     va_start(args, fmt);
-    vsnprintf(buffer, sizeof(buffer), fmt, args);
+    // spdlog will format the string for us
+    s_Logger->log(
+        spdlog::source_loc{file, line, /*func=*/""},
+        ToSpdLevel(level),
+        fmt,
+        args);
+
     va_end(args);
-
-    // id rather the log levels be uppercase so
-    auto lvl = ToSpdLevel(level);
-    auto lvlView = spdlog::level::to_string_view(lvl);
-    std::string lvlName{lvlView.begin(), lvlView.end()};
-    std::transform(lvlName.begin(), lvlName.end(), lvlName.begin(), [](unsigned char c)
-                   { return std::toupper(c); });
-
-    std::string msg = "| " + lvlName + " | " + buffer;
-
-    spdlog::source_loc loc{file, line, /*func=*/""};
-    s_Logger->log(loc, lvl, "{}", msg);
 }
