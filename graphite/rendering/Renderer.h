@@ -69,16 +69,11 @@ private:
     int m_drawCallCount = 0;
     int m_triangleCount = 0;
 
-    inline static constexpr std::array<float, 4> BACKBUFFER_CLEAR_COLOR = {0.2f, 0.2f, 0.2f, 1.0f};
-
     // helpers
 
     // initialization functions
-    // void InitStateObjects(ID3D11Device *device);
     void InitImGui(HWND hwnd, ID3D11Device *device, ID3D11DeviceContext *context);
-    // void InitShadersAndLayout(ID3D11Device *device);
     void InitConstantBuffers(ID3D11Device *device);
-    // void InitLightingPass(ID3D11Device *device);
 
     // geometry pass functions
     void SetPassState(ID3D11DeviceContext *context);

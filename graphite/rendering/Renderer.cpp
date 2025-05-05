@@ -6,7 +6,7 @@
 #include "RendererSetup.h"
 #include "Material.h"
 #include "Vertex.h"
-#include "Logger.h"
+#include "utils/Logger.h"
 #include "ConstantBuffers.h"
 #include <glm/gtc/matrix_transform.hpp>
 #include "utils/ImGuiConfig.h"
@@ -224,7 +224,7 @@ void Renderer::EndFrame(StatsSystem *stats)
     context->OMSetRenderTargets(1, &backRTV, nullptr);
 
     // clear back buffer
-    context->ClearRenderTargetView(backRTV, BACKBUFFER_CLEAR_COLOR.data());
+    context->ClearRenderTargetView(backRTV, CC::BACKBUFFER_CLEAR.data());
 
     ImGui_ImplDX11_NewFrame();
     ImGui_ImplWin32_NewFrame();
@@ -346,8 +346,15 @@ void Renderer::SetPassState(ID3D11DeviceContext *context)
 void Renderer::UpdatePerObjectConstantBuffer(ID3D11DeviceContext *context, const TransformComponent &transform)
 {
     PerObjectData pod{};
+    // apply transform in world space
     glm::mat4 world(1.0f);
     world = glm::translate(world, transform.position);
+
+    // build world matrix: translate, then apply rotations in yxz order
+    // yaw
+    // pitch
+    // roll
+    // matches Camera and avoids unexpected twisting when combining rotations
 
     world = glm::rotate(world, transform.rotation.y, glm::vec3{0, 1, 0});
     world = glm::rotate(world, transform.rotation.x, glm::vec3{1, 0, 0});

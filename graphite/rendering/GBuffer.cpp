@@ -114,9 +114,9 @@ void GBuffer::Bind(ID3D11DeviceContext *context)
 
 void GBuffer::Clear(ID3D11DeviceContext *context)
 {
-    context->ClearRenderTargetView(m_rtvAlbedo.Get(), CLEAR_ALBEDO.data());
-    context->ClearRenderTargetView(m_rtvNormal.Get(), CLEAR_NORMAL.data());
-    context->ClearRenderTargetView(m_rtvORM.Get(), CLEAR_ORM.data());
+    context->ClearRenderTargetView(m_rtvAlbedo.Get(), CC::GBUFFER_ALBEDO.data());
+    context->ClearRenderTargetView(m_rtvNormal.Get(), CC::GBUFFER_NORMAL.data());
+    context->ClearRenderTargetView(m_rtvORM.Get(), CC::GBUFFER_ORM.data());
     context->ClearDepthStencilView(m_depthDSV.Get(), D3D11_CLEAR_DEPTH, 1.0f, 0);
 }
 

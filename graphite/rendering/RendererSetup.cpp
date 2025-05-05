@@ -1,12 +1,9 @@
 #include "RendererSetup.h"
 #include "utils/Logger.h"
 #include "ShaderUtils.h"
+#include "cfg/Config.h"
 
-// shader file paths
-static constexpr const wchar_t *GEOMETRY_VS_FILE = L"shaders/GeometryVS.hlsl";
-static constexpr const wchar_t *GEOMETRY_PS_FILE = L"shaders/GeometryPS.hlsl";
-static constexpr const wchar_t *LIGHTING_VS_FILE = L"shaders/LightingVS.hlsl";
-static constexpr const wchar_t *LIGHTING_PS_FILE = L"shaders/LightingPS.hlsl";
+namespace ShaderPaths = Config::ShaderPaths;
 
 namespace RendererSetup
 {
@@ -52,7 +49,7 @@ namespace RendererSetup
         ComPtr<ID3D11InputLayout> &outInputLayout)
     {
         ComPtr<ID3DBlob> vsBlob, psBlob;
-        if (!CompileShaderFromFile(GEOMETRY_VS_FILE, "main", "vs_5_0", vsBlob))
+        if (!CompileShaderFromFile(ShaderPaths::GEOMETRY_VS, "main", "vs_5_0", vsBlob))
             throw std::runtime_error("GeometryVS compilation failed");
         device->CreateVertexShader(
             vsBlob->GetBufferPointer(),
@@ -60,7 +57,7 @@ namespace RendererSetup
             nullptr,
             outVS.GetAddressOf());
 
-        if (!CompileShaderFromFile(GEOMETRY_PS_FILE, "main", "ps_5_0", psBlob))
+        if (!CompileShaderFromFile(ShaderPaths::GEOMETRY_PS, "main", "ps_5_0", psBlob))
             throw std::runtime_error("GeometryPS compilation failed");
         device->CreatePixelShader(
             psBlob->GetBufferPointer(),
@@ -88,7 +85,7 @@ namespace RendererSetup
         ComPtr<ID3D11PixelShader> &outPS)
     {
         ComPtr<ID3DBlob> vsBlob, psBlob;
-        if (!CompileShaderFromFile(LIGHTING_VS_FILE, "main", "vs_5_0", vsBlob))
+        if (!CompileShaderFromFile(ShaderPaths::LIGHTING_VS, "main", "vs_5_0", vsBlob))
             throw std::runtime_error("LightingVS compilation failed");
         device->CreateVertexShader(
             vsBlob->GetBufferPointer(),
@@ -96,7 +93,7 @@ namespace RendererSetup
             nullptr,
             outVS.GetAddressOf());
 
-        if (!CompileShaderFromFile(LIGHTING_PS_FILE, "main", "ps_5_0", psBlob))
+        if (!CompileShaderFromFile(ShaderPaths::LIGHTING_PS, "main", "ps_5_0", psBlob))
             throw std::runtime_error("LightingPS compilation failed");
         device->CreatePixelShader(
             psBlob->GetBufferPointer(),

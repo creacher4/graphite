@@ -22,7 +22,7 @@ public:
     void OnResize(int width, int height);
     void Shutdown();
 
-    RenderSystem &GetRenderSystem() { return *m_RenderSystem; }
+    RenderSystem &GetRenderSystem() const { return *m_RenderSystem; }
 
 private:
     std::unique_ptr<ECSRegistry> m_Registry;

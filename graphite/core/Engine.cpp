@@ -3,19 +3,13 @@
 #include "ecs/RenderableComponent.h"
 #include "rendering/Material.h"
 #include "utils/Logger.h"
+#include "cfg/Config.h"
 #include <string>
 #include <sstream>
 #include <glm/gtc/matrix_transform.hpp>
 
 namespace
 {
-    // model & texture asset IDs
-    inline const AssetID MODEL_PATH = "assets/models/marble_bust/marble_bust_01_8k.gltf";
-    inline const AssetID MATERIAL_ID = "assets/models/marble_bust/marble_bust_01_8k";
-    inline const AssetID ALBEDO_PATH = "assets/models/marble_bust/marble_bust_albedo.png";
-    inline const AssetID NORMAL_PATH = "assets/models/marble_bust/marble_bust_normals.png";
-    inline const AssetID ORM_PATH = "assets/models/marble_bust/marble_bust_orm.png";
-
     // default camera settings
     inline constexpr float DEFAULT_FOV_Y_RAD = glm::radians(45.0f);
     inline constexpr float DEFAULT_NEAR_Z = 0.1f;
@@ -124,11 +118,12 @@ void Engine::InitScene()
     LOG_INFO("Initializing scene...");
     try
     {
-        AssetID modelPath = MODEL_PATH;
-        AssetID materialID = MATERIAL_ID;
-        AssetID albedoPath = ALBEDO_PATH;
-        AssetID normalPath = NORMAL_PATH;
-        AssetID ormPath = ORM_PATH;
+        namespace SA = Config::SceneAssets;
+        AssetID modelPath = SA::MODEL_PATH;
+        AssetID materialID = SA::MATERIAL_ID;
+        AssetID albedoPath = SA::ALBEDO_PATH;
+        AssetID normalPath = SA::NORMAL_PATH;
+        AssetID ormPath = SA::ORM_PATH;
 
         // load model
         if (!m_AssetManager->LoadModel(modelPath))

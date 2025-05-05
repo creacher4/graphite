@@ -77,7 +77,7 @@ PlatformWindow::~PlatformWindow()
     DestroyWindow(m_HWND);
 }
 
-bool PlatformWindow::ProcessMessages()
+bool PlatformWindow::ProcessMessages() const
 {
     MSG msg = {};
     while (PeekMessage(&msg, nullptr, 0U, 0U, PM_REMOVE))

@@ -10,21 +10,21 @@ struct DirectionalLightData
 
     // slot 1
     glm::vec3 color;
-    float useAlbedo;
+    int useAlbedo;
 
     // slot 2
-    float useNormals;
-    float useAO;
-    float pad1;
-    float pad2;
+    int useNormals;
+    int useAO;
+    int pad1;
+    int pad2;
 
     // slot 3
     glm::vec3 viewDir;
-    float useRoughness;
+    int useRoughness;
 
     // slot 4
-    float useMetallic;
-    float useFresnel;
-    float useRim;
-    float pad3;
+    int useMetallic;
+    int useFresnel;
+    int useRim;
+    int pad3;
 };
