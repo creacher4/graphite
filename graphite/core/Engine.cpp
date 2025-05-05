@@ -47,7 +47,7 @@ void Engine::Shutdown()
 
 void Engine::OnResize(int width, int height)
 {
-    m_ResizeSystem.OnResize(width, height);
+    m_ResizeSystem->OnResize(width, height);
 
     {
         float aspect = float(width) / float(height);
@@ -89,24 +89,31 @@ void Engine::InitSystems(HWND hwnd)
     m_AssetManager = std::make_unique<AssetManager>();
     m_AssetManager->SetDeviceManager(m_DeviceManager.get());
 
-    // render and stats system
-    m_RenderSystem.SetDeviceManager(m_DeviceManager.get());
-    m_RenderSystem.SetAssetManager(m_AssetManager.get());
-    m_RenderSystem.SetRegistry(m_Registry.get());
-    m_RenderSystem.SetCamera(m_Camera.get());
+    // render system
+    m_RenderSystem = std::make_unique<RenderSystem>(
+        m_DeviceManager.get(),
+        m_AssetManager.get(),
+        m_Registry.get(),
+        m_Camera.get(),
+        hwnd,
+        m_Width,
+        m_Height);
 
-    m_StatsSystem.SetRenderSystem(&m_RenderSystem);
-    m_StatsSystem.SetCamera(m_Camera.get());
-    m_SystemManager->RegisterSystem(&m_StatsSystem);
+    // stats system (which currently relies on render system)
+    m_StatsSystem = std::make_unique<StatsSystem>(
+        m_RenderSystem.get(),
+        m_Camera.get());
+    m_SystemManager->RegisterSystem(m_StatsSystem.get());
 
-    m_RenderSystem.SetStatsSystem(&m_StatsSystem);
-    m_RenderSystem.SetWindowHandle(hwnd);
-    m_RenderSystem.SetWindowSize(m_Width, m_Height);
-    m_SystemManager->RegisterSystem(&m_RenderSystem);
+    // inject stats back into renderer, then register it
+    m_RenderSystem->SetStatsSystem(m_StatsSystem.get());
+    m_SystemManager->RegisterSystem(m_RenderSystem.get());
 
-    m_ResizeSystem.SetDeviceManager(m_DeviceManager.get());
-    m_ResizeSystem.SetRenderSystem(&m_RenderSystem);
-    m_SystemManager->RegisterSystem(&m_ResizeSystem);
+    // then resize
+    m_ResizeSystem = std::make_unique<ResizeSystem>(
+        m_DeviceManager.get(),
+        m_RenderSystem.get());
+    m_SystemManager->RegisterSystem(m_ResizeSystem.get());
 
     // initialize all systems
     m_SystemManager->InitAll();
@@ -145,7 +152,7 @@ void Engine::InitScene()
         t.rotation = glm::vec3(glm::pi<float>(), 0, 0);
         t.scale = glm::vec3(1, 1, 1);
         m_Registry->AddComponent<TransformComponent>(entity, t);
-        m_Registry->AddComponent<RenderableComponent>(entity, RenderableComponent{modelPath, materialID});
+        m_Registry->AddComponent<RenderableComponent>(entity, RenderableComponent{modelPath, 0, materialID});
     }
     catch (const std::exception &e)
     {

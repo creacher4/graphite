@@ -8,6 +8,24 @@
 #include "StatsSystem.h"
 #include <Windows.h>
 
+RenderSystem::RenderSystem(
+    DeviceManager *deviceManager,
+    AssetManager *assetManager,
+    ECSRegistry *registry,
+    Camera *camera,
+    HWND hwnd,
+    UINT width,
+    UINT height)
+    : m_DeviceManager(deviceManager),
+      m_AssetManager(assetManager),
+      m_Registry(registry),
+      m_Camera(camera),
+      m_Hwnd(hwnd),
+      m_Width(width),
+      m_Height(height)
+{
+}
+
 void RenderSystem::Init()
 {
     LOG_INFO("Initializing render system...");

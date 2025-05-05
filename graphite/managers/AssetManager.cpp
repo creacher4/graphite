@@ -16,15 +16,9 @@ void AssetManager::SetDeviceManager(
     m_DeviceManager = deviceManager;
 }
 
-// const AssetManager::MeshResource *AssetManager::GetMesh(const std::string &id)
-// {
-//     auto it = m_Meshes.find(id);
-//     return (it != m_Meshes.end()) ? &it->second : nullptr;
-// }
-
 void AssetManager::Shutdown()
 {
-    m_Meshes.clear();
+    // m_Meshes.clear();
     LOG_INFO("AssetManager: Meshes cleared");
 }
 
@@ -56,7 +50,10 @@ bool AssetManager::LoadTexture(
 bool AssetManager::LoadModel(
     const AssetID &path)
 {
-    if (m_Meshes.count(path))
+    // if (m_Meshes.count(path))
+    //    return true;
+
+    if (m_Models.count(path))
         return true;
 
     Assimp::Importer importer;
@@ -72,25 +69,53 @@ bool AssetManager::LoadModel(
         throw std::runtime_error("Failed to load model: " + path.string());
     }
 
-    aiMesh *mesh = scene->mMeshes[0]; // take first mesh for simplicity
-    std::vector<Vertex> vertices;
-    std::vector<uint32_t> indices;
+    // aiMesh *mesh = scene->mMeshes[0]; // take first mesh for simplicity
+    // std::vector<Vertex> vertices;
+    // std::vector<uint32_t> indices;
 
-    if (!ProcessAssimpMesh(mesh, vertices, indices))
+    // if (!ProcessAssimpMesh(mesh, vertices, indices))
+    // {
+    //     LOG_CRITICAL("AssetManager Failed to process mesh: {}", path.string());
+    //     throw std::runtime_error("Failed to process mesh: " + path.string());
+    // }
+
+    // MeshResource mr;
+    // if (!CreateMeshResourceBuffers(vertices, indices, mr))
+    // {
+    //     LOG_CRITICAL("AssetManager Failed to create mesh resource buffers: {}", path.string());
+    //     throw std::runtime_error("Failed to create mesh resource buffers: " + path.string());
+    // }
+
+    // m_Meshes[path] = std::move(mr);
+    // LOG_INFO("Model loaded succesfully");
+    // return true;
+
+    ModelResource model;
+    model.meshes.reserve(scene->mNumMeshes);
+    for (unsigned i = 0; i < scene->mNumMeshes; ++i)
     {
-        LOG_CRITICAL("AssetManager Failed to process mesh: {}", path.string());
-        throw std::runtime_error("Failed to process mesh: " + path.string());
+        aiMesh *mesh = scene->mMeshes[i];
+        std::vector<Vertex> vertices;
+        std::vector<uint32_t> indices;
+
+        if (!ProcessAssimpMesh(mesh, vertices, indices))
+        {
+            LOG_CRITICAL("AssetManager Failed to process mesh: {}", path.string());
+            throw std::runtime_error("Failed to process mesh: " + path.string());
+        }
+
+        MeshResource mr;
+        if (!CreateMeshResourceBuffers(vertices, indices, mr))
+        {
+            LOG_CRITICAL("AssetManager Failed to create mesh resource buffers: {}", path.string());
+            throw std::runtime_error("Failed to create mesh resource buffers: " + path.string());
+        }
+
+        model.meshes.push_back(std::move(mr));
     }
 
-    MeshResource mr;
-    if (!CreateMeshResourceBuffers(vertices, indices, mr))
-    {
-        LOG_CRITICAL("AssetManager Failed to create mesh resource buffers: {}", path.string());
-        throw std::runtime_error("Failed to create mesh resource buffers: " + path.string());
-    }
-
-    m_Meshes[path] = std::move(mr);
-    LOG_INFO("Model loaded succesfully");
+    m_Models[path] = std::move(model);
+    LOG_INFO("Model loaded successfully: {}", path.string());
     return true;
 }
 
@@ -114,6 +139,13 @@ const AssetManager::MeshResource *AssetManager::GetMesh(
 {
     auto it = m_Meshes.find(id);
     return (it != m_Meshes.end()) ? &it->second : nullptr;
+}
+
+const AssetManager::ModelResource *AssetManager::GetModel(
+    const AssetID &id) const
+{
+    auto it = m_Models.find(id);
+    return (it != m_Models.end()) ? &it->second : nullptr;
 }
 
 const AssetManager::TextureResource *AssetManager::GetTexture(

@@ -13,27 +13,27 @@ class StatsSystem;
 class RenderSystem : public ISystem
 {
 public:
+    RenderSystem(
+        DeviceManager *deviceManager,
+        AssetManager *assetManager,
+        ECSRegistry *registry,
+        Camera *camera,
+        HWND hwnd,
+        UINT width,
+        UINT height);
     void Init() override;
     void Update(float deltaTime) override;
     void Shutdown() override;
     void OnResize(UINT width, UINT height);
 
-    void SetDeviceManager(DeviceManager *deviceManager) { m_DeviceManager = deviceManager; }
-    void SetAssetManager(AssetManager *assetManager) { m_AssetManager = assetManager; }
-    void SetRegistry(ECSRegistry *registry) { m_Registry = registry; }
-    void SetWindowHandle(HWND hwnd) { m_Hwnd = hwnd; }
-    void SetWindowSize(UINT width, UINT height)
-    {
-        m_Width = width;
-        m_Height = height;
-    }
-
-    void SetCamera(Camera *camera) { m_Camera = camera; }
+    // only this remains injected via setter to avoid circular ctor dependency
     void SetStatsSystem(StatsSystem *s) { m_stats = s; }
 
+    // getters
     int GetDrawCallCount() const { return m_Renderer.GetDrawCallCount(); }
     int GetTriangleCount() const { return m_Renderer.GetTriangleCount(); }
 
+    // wireframe mode
     void EnableWireframeNoCull(bool e) { m_Renderer.EnableWireframeNoCull(e); }
     bool IsWireframeNoCullEnabled() const { return m_Renderer.IsWireframeNoCullEnabled(); }
 

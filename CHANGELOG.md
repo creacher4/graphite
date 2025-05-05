@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.6.2] – 2025-05-05
+
+### Changed
+
+- Refactored `RenderSystem`, `ResizeSystem`, and `StatsSystem` to use constructor injection instead of setters
+- Improved `Logger` by replacing manual string manipulation with the original strucuted `spdlog` pattern formatting
+- Moved `DirectionalLightData` definition to a dedicated `Lighting.h` header
+- Extended `AssetManager::LoadModel` to support multi-mesh models
+- Decomposed `Renderer` setup logic into a new `RendererSetup` namespace for modular access
+
 ## [0.6.1] – 2025-05-05
 
 ### Added

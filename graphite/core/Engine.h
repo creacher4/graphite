@@ -22,7 +22,7 @@ public:
     void OnResize(int width, int height);
     void Shutdown();
 
-    RenderSystem &GetRenderSystem() { return m_RenderSystem; }
+    RenderSystem &GetRenderSystem() { return *m_RenderSystem; }
 
 private:
     std::unique_ptr<ECSRegistry> m_Registry;
@@ -30,11 +30,11 @@ private:
     std::unique_ptr<DeviceManager> m_DeviceManager;
     std::unique_ptr<AssetManager> m_AssetManager;
     std::unique_ptr<Camera> m_Camera;
+    std::unique_ptr<StatsSystem> m_StatsSystem;
+    std::unique_ptr<RenderSystem> m_RenderSystem;
+    std::unique_ptr<ResizeSystem> m_ResizeSystem;
 
     // systems
-    RenderSystem m_RenderSystem;
-    ResizeSystem m_ResizeSystem;
-    StatsSystem m_StatsSystem;
     CameraController m_cameraController;
 
     UINT m_Width;
