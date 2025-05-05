@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.6.3] – 2025-05-05
+
+### Added
+
+- `Config.h` for centralized engine settings (window, shader paths, scene assets, clear colors)
+
+### Changed
+
+- Camera rotation now uses accumulated yaw/pitch instead of raw deltas
+- `DirectionalLightData` now uses `int` toggles; shaders updated accordingly
+- Systems updated to use new config structure
+- Improved const correctness across modules
+
 ## [0.6.2] – 2025-05-05
 
 ### Changed

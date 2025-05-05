@@ -12,7 +12,7 @@ void SystemManager::InitAll()
         sys->Init();
     }
 }
-void SystemManager::UpdateAll(float deltaTime)
+void SystemManager::UpdateAll(float deltaTime) const
 {
     for (auto sys : m_Systems)
     {
@@ -20,7 +20,7 @@ void SystemManager::UpdateAll(float deltaTime)
     }
 }
 
-void SystemManager::ShutdownAll()
+void SystemManager::ShutdownAll() const
 {
     for (auto sys : m_Systems)
     {

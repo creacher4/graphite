@@ -7,12 +7,12 @@ SamplerState sampl : register(s0);
 cbuffer LightBuffer : register(b0)
 {
     float3 lightDir;    float pad0;
-    float3 lightColor;  float useAlbedo;
-    float useNormals;   float useAO;
-    float pad1;         float pad2;
-    float3 viewDir;     float useRoughness;
-    float useMetallic;  float useFresnel;
-    float useRim;       float pad3;
+    float3 lightColor;  int useAlbedo;
+    int useNormals;     int useAO;
+    int pad1;           int pad2;
+    float3 viewDir;     int useRoughness;
+    int useMetallic;  int useFresnel;
+    int useRim;       int pad3;
 };
 
 struct VS_OUTPUT
@@ -28,7 +28,7 @@ float4 main(VS_OUTPUT input) : SV_Target
     float3 albedo = albedoTex.Sample(sampl, uv).rgb;
 
     // neutral white surface
-    if (useAlbedo < 0.5f) albedo = float3(1.0, 1.0, 1.0);
+    if (useAlbedo == 0) albedo = float3(1,1,1);
 
 
     // decoding from [0, 1] to [-1, 1]
@@ -43,7 +43,7 @@ float4 main(VS_OUTPUT input) : SV_Target
     float NdotL = max(dot(N, L), 0);
 
     // disables normals-based lighting; surfaces are lit as if they were flat
-    if (useNormals < 0.5f) NdotL = 1;
+    if (useNormals == 0) NdotL = 1;
 
 
     // sample orm maps
@@ -57,20 +57,20 @@ float4 main(VS_OUTPUT input) : SV_Target
     // when ao is disabled, we set it to 1 to avoid zeroing out the lighting
     // using 0 here would erase the diffuse term completely, which is not what we want
 
-    if (useAO < 0.5f) ao = 1;
+    if (useAO == 0) ao = 1;
 
     // roughness controls the spread of specular highlights
     // typically used to interpolate sharpess in lighting models (e.g. shininess or specular blurring)
     // setting roughness to 0 disables the roughness effect by simulating a perfectly smooth surface
     // essentially, acting as a neutral baseline for testing lighting without roughness scattering
 
-    if (useRoughness < 0.5f) roughness = 0;
+    if (useRoughness == 0) roughness = 0;
 
     // metallic controlsl whether a surface reflects light like a metal or a dielectric
     // a value of 0 here means the surface reflects like plastic, wood, etc.
     // while 1 means it reflects like a metal, with colored reflections and no diffuse component
 
-    if (useMetallic < 0.5f) metallic = 0;
+    if (useMetallic == 0) metallic = 0;
     
 
     // apply ao to diffuse lighting
@@ -90,7 +90,7 @@ float4 main(VS_OUTPUT input) : SV_Target
     // see references to other specular models: https://graphicrants.blogspot.com/2013/08/specular-brdf-reference.html
     float VoH = saturate(dot(V, H));
     float3 fresnel = F0 + (1 - F0) * pow(1 - VoH, 5);
-    if (useFresnel < 0.5f) fresnel = float3(0.0, 0.0, 0.0); // disables fresnel term
+    if (useFresnel == 0) fresnel = float3(0.0, 0.0, 0.0); // disables fresnel term
 
     float NdotH = saturate(dot(N, H));
     float specStrength = pow(NdotH, shininess);
@@ -104,7 +104,7 @@ float4 main(VS_OUTPUT input) : SV_Target
     // rim light can easily be overdone, so it's kept at a low intensity
     // it's also multiplied by the albedo color to match the color of the surface
     float3 rimLight = rimFactor * 0.15f * albedo;
-    if (useRim < 0.5f) rimLight = 0; // disables rim light
+    if (useRim == 0) rimLight = 0; // disables rim light
 
     
     // final color, combining all lighting terms

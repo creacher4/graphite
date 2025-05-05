@@ -19,8 +19,8 @@ class Camera
     mutable glm::vec3 m_forward, m_right, m_up;
     mutable bool m_dirtyView = true, m_dirtyProjection = true;
 
-    // quarternions can legit piss off bro
-    // i just want to use euler angles for now
+    // using simple yaw/ptch euler camera model for now
+    // view matrix rebuilt 
     void RecalcView() const
     {
         m_forward = glm::normalize(glm::vec3{
@@ -62,10 +62,19 @@ public:
         m_pos += delta;
         m_dirtyView = true;
     }
-    void Rotate(float yaw, float pitch)
+    void Rotate(float yawDelta, float pitchDelta)
     {
-        m_yaw += yaw;
-        m_pitch += pitch;
+        // accum yaw and then wrap
+        m_yaw += yawDelta;
+        {
+            float fullTurn = glm::two_pi<float>();
+            m_yaw = std::fmod(m_yaw, fullTurn);
+            if (m_yaw < 0.0f)
+                m_yaw += fullTurn;
+        }
+
+        // accum and clamp pitch
+        m_pitch += pitchDelta;
         float limit = glm::half_pi<float>() * 0.99f;
         m_pitch = glm::clamp(m_pitch, -limit, limit);
 

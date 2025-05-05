@@ -13,7 +13,7 @@ public:
     ~PlatformWindow();
 
     HWND GetHWND() const { return m_HWND; }
-    bool ProcessMessages();
+    bool ProcessMessages() const;
 
     void SetResizeCallback(ResizeCallback cb) { m_OnResize = std::move(cb); }
 

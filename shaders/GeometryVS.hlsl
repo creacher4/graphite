@@ -29,6 +29,9 @@ VS_OUTPUT main(VS_INPUT input) {
     float4 worldPos = mul(worldMatrix, float4(input.position, 1.0f));
     float4 viewPos = mul(viewMatrix, worldPos);
     output.position = mul(projectionMatrix, viewPos);
+
+    // i would use the inverse transpose of the world matrix here, but my inverse function doesn't work
+
     output.normal = normalize(mul(input.normal, (float3x3)worldMatrix));
     output.texCoord = input.texCoord;
 
