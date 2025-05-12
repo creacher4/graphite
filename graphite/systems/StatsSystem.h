@@ -1,7 +1,6 @@
 #pragma once
 
 #include "core/ISystem.h"
-// #include "rendering/Camera.h"
 #include <glm/vec3.hpp>
 #include <string>
 

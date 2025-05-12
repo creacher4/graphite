@@ -20,7 +20,7 @@ class Camera
     mutable bool m_dirtyView = true, m_dirtyProjection = true;
 
     // using simple yaw/ptch euler camera model for now
-    // view matrix rebuilt 
+    // view matrix rebuilt on demand
     void RecalcView() const
     {
         m_forward = glm::normalize(glm::vec3{

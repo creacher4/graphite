@@ -33,8 +33,8 @@ public:
     int GetDrawCallCount() const { return m_drawCallCount; }
     int GetTriangleCount() const { return m_triangleCount; }
 
-    void EnableWireframeNoCull(bool enable) { m_useWire_NoCull = enable; }
-    bool IsWireframeNoCullEnabled() const { return m_useWire_NoCull; }
+    void SetWireframeMode(bool enable) { m_useWire_NoCull = enable; }
+    bool GetWireframeMode() const { return m_useWire_NoCull; }
 
 private:
     GBuffer m_GBuffer;

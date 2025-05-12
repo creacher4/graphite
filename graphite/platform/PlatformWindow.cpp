@@ -51,8 +51,7 @@ PlatformWindow::PlatformWindow(HINSTANCE hInstance, int width, int height, const
 
     if (!m_HWND)
     {
-        // i dont think the formatting {} will work here because of the macro
-        LOG_ERROR("Failed to create window. GetLastError: {}", GetLastError());
+        LOG_ERROR("Failed to create window.");
         UnregisterClass(wc.lpszClassName, wc.hInstance);
     }
 

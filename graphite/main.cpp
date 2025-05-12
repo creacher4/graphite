@@ -17,6 +17,8 @@ int WINAPI WinMain(
     int nShowCmd)
 {
     (void)hPrevInstance;
+	(void)lpCmdLine;
+	(void)nShowCmd;
 
     Logger::Init(DEFAULT_LOG_LEVEL, LOG_FILE_PATH);
     LOG_INFO("Starting up Graphite...");

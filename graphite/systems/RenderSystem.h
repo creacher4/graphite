@@ -34,8 +34,8 @@ public:
     int GetTriangleCount() const { return m_Renderer.GetTriangleCount(); }
 
     // wireframe mode
-    void EnableWireframeNoCull(bool e) { m_Renderer.EnableWireframeNoCull(e); }
-    bool IsWireframeNoCullEnabled() const { return m_Renderer.IsWireframeNoCullEnabled(); }
+    void SetWireframeMode(bool e) { m_Renderer.SetWireframeMode(e); }
+    bool GetWireframeMode() const { return m_Renderer.GetWireframeMode(); }
 
 private:
     DeviceManager *m_DeviceManager = nullptr;

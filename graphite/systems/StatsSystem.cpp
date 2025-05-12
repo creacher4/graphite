@@ -64,10 +64,10 @@ void StatsSystem::DrawImGui()
                 glm::degrees(m_camPitch));
 
     ImGui::Separator();
-    bool wire = m_renderSystem->IsWireframeNoCullEnabled();
+    bool wire = m_renderSystem->GetWireframeMode();
     ImGui::Checkbox("Wireframe: No-Cull", &wire);
     {
-        m_renderSystem->EnableWireframeNoCull(wire);
+        m_renderSystem->SetWireframeMode(wire);
     }
 
     ImGui::End();

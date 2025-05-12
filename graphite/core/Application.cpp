@@ -3,14 +3,6 @@
 #include <chrono>
 #include <string>
 
-// namespace
-// {
-//     // window config defaults
-//     static constexpr int DEFAULT_WINDOW_WIDTH = 1280;
-//     static constexpr int DEFAULT_WINDOW_HEIGHT = 720;
-//     static const std::wstring DEFAULT_WINDOW_TITLE{L"Graphite"};
-// }
-
 Application::Application(HINSTANCE hInstance)
 {
     m_Window = std::make_unique<PlatformWindow>(
