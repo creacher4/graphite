@@ -1,6 +1,5 @@
 #include "Renderer.h"
 #include "managers/DeviceManager.h"
-#include <DirectXTK/DDSTextureLoader.h>
 #include <stdexcept>
 #include "ecs/RenderableComponent.h"
 #include "RendererSetup.h"
@@ -48,6 +47,7 @@ void Renderer::InitConstantBuffers(ID3D11Device *device)
     if (FAILED(hr))
     {
         LOG_CRITICAL("Failed to create per-frame constant buffer");
+        throw std::runtime_error("Failed to create per-frame constant buffer");
     }
     LOG_INFO("Created per-frame constant buffer");
 
@@ -58,6 +58,7 @@ void Renderer::InitConstantBuffers(ID3D11Device *device)
     if (FAILED(hr))
     {
         LOG_CRITICAL("Failed to create per-object constant buffer");
+        throw std::runtime_error("Failed to create per-object constant buffer");
     }
     LOG_INFO("Created per-object constant buffer");
 }
@@ -101,6 +102,7 @@ void Renderer::Init(DeviceManager *deviceManager, HWND hwnd, UINT width, UINT he
         if (FAILED(hr))
         {
             LOG_CRITICAL("Failed to create directional light constant buffer");
+            throw std::runtime_error("Failed to create directional light constant buffer");
         }
         LOG_INFO("Created directional light constant buffer");
     }
@@ -108,6 +110,7 @@ void Renderer::Init(DeviceManager *deviceManager, HWND hwnd, UINT width, UINT he
     if (!m_GBuffer.Init(device, width, height))
     {
         LOG_CRITICAL("Failed to initialize GBuffer");
+        throw std::runtime_error("Failed to initialize GBuffer");
     }
     LOG_INFO("Initialized GBuffer");
 }
@@ -251,16 +254,17 @@ void Renderer::EndFrame(StatsSystem *stats)
 
     // build and upload light data
     DirectionalLightData lightData{};
-    lightData.dir = glm::normalize(glm::vec3{1.0f, -1.0f, 0.5f}); // from the top right
+    // from the top
+    lightData.dir = glm::normalize(glm::vec3{0.0f, 1.0f, 0.0f});
     lightData.color = glm::vec3{1.0f, 0.95f, 0.85f};
-    lightData.useAlbedo = cbAlbedo ? 1.0f : 0.0f;
-    lightData.useNormals = cbNormals ? 1.0f : 0.0f;
-    lightData.useAO = cbAO ? 1.0f : 0.0f;
+    lightData.useAlbedo = cbAlbedo ? 1 : 0;
+    lightData.useNormals = cbNormals ? 1 : 0;
+    lightData.useAO = cbAO ? 1 : 0;
     lightData.viewDir = stats->GetViewDir();
-    lightData.useRoughness = cbRoughness ? 1.0f : 0.0f;
-    lightData.useMetallic = cbMetallic ? 1.0f : 0.0f;
-    lightData.useFresnel = cbFresnel ? 1.0f : 0.0f;
-    lightData.useRim = cbRim ? 1.0f : 0.0f;
+    lightData.useRoughness = cbRoughness ? 1 : 0;
+    lightData.useMetallic = cbMetallic ? 1 : 0;
+    lightData.useFresnel = cbFresnel ? 1 : 0;
+    lightData.useRim = cbRim ? 1 : 0;
     context->UpdateSubresource(
         m_cbLight.Get(), 0, nullptr, &lightData, 0, 0);
 

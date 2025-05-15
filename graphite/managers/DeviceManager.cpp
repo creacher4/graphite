@@ -4,7 +4,7 @@
 void DeviceManager::InitDevice(HWND hwnd, UINT width, UINT height)
 {
     DXGI_SWAP_CHAIN_DESC scd = {};
-    scd.BufferCount = 1;
+    scd.BufferCount = 2; // or 3 for triple buffering
     scd.BufferDesc.Width = width;
     scd.BufferDesc.Height = height;
     scd.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
@@ -12,7 +12,7 @@ void DeviceManager::InitDevice(HWND hwnd, UINT width, UINT height)
     scd.OutputWindow = hwnd;
     scd.SampleDesc.Count = 1;
     scd.Windowed = TRUE;
-    scd.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
+    scd.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
 
     UINT createFlags = 0;
 #if defined(_DEBUG)
@@ -37,6 +37,7 @@ void DeviceManager::InitDevice(HWND hwnd, UINT width, UINT height)
     if (FAILED(hr))
     {
         LOG_CRITICAL("Failed to create D3D11 device and swap chain. HRESULT: {}", hr);
+        throw std::runtime_error("Failed to create D3D11 device and swap chain");
     }
     LOG_INFO("Created D3D11 device and swap chain");
 
@@ -56,8 +57,10 @@ void DeviceManager::InitDevice(HWND hwnd, UINT width, UINT height)
 
 void DeviceManager::ResizeSwapChain(UINT width, UINT height)
 {
+    m_Context->OMSetRenderTargets(0, nullptr, nullptr);
+
     m_BackBufferRTV.Reset();
-    HRESULT hr = m_SwapChain->ResizeBuffers(1, width, height, DXGI_FORMAT_R8G8B8A8_UNORM, 0);
+    HRESULT hr = m_SwapChain->ResizeBuffers(2, width, height, DXGI_FORMAT_R8G8B8A8_UNORM, 0);
     if (FAILED(hr))
         LOG_ERROR("Failed to resize swap chain. HRESULT: {}", hr);
 
@@ -65,6 +68,7 @@ void DeviceManager::ResizeSwapChain(UINT width, UINT height)
     hr = m_SwapChain->GetBuffer(0, IID_PPV_ARGS(backBuffer.GetAddressOf()));
     if (FAILED(hr))
         LOG_ERROR("Failed to get back buffer after resize. HRESULT: {}", hr);
+
     hr = m_Device->CreateRenderTargetView(backBuffer.Get(), nullptr, m_BackBufferRTV.GetAddressOf());
     if (FAILED(hr))
         LOG_ERROR("Failed to create render target view after resize. HRESULT: {}", hr);

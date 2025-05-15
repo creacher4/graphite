@@ -37,53 +37,114 @@ bool GBuffer::Init(ID3D11Device *device, UINT width, UINT height)
 
     // albedo (RGBA8)
     desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-    device->CreateTexture2D(&desc, nullptr, m_texAlbedo.GetAddressOf());
+
+    hr = device->CreateTexture2D(&desc, nullptr, m_texAlbedo.GetAddressOf());
+
+    if (FAILED(hr))
+    {
+        LOG_ERROR("Failed to create albedo texture");
+        return false;
+    }
+
     hr = device->CreateRenderTargetView(m_texAlbedo.Get(), nullptr, m_rtvAlbedo.GetAddressOf());
+
     if (FAILED(hr))
     {
         LOG_ERROR("Failed to create albedo render target view");
         return false;
     }
-    device->CreateShaderResourceView(m_texAlbedo.Get(), nullptr, m_srvAlbedo.GetAddressOf());
+
+    hr = device->CreateShaderResourceView(m_texAlbedo.Get(), nullptr, m_srvAlbedo.GetAddressOf());
+
+    if (FAILED(hr))
+    {
+        LOG_ERROR("Failed to create albedo shader resource view");
+        return false;
+    }
 
     // normal (RGBA16F)
     desc.Format = DXGI_FORMAT_R16G16B16A16_FLOAT;
-    device->CreateTexture2D(&desc, nullptr, m_texNormal.GetAddressOf());
+    hr = device->CreateTexture2D(&desc, nullptr, m_texNormal.GetAddressOf());
+
+    if (FAILED(hr))
+    {
+        LOG_ERROR("Failed to create normal texture");
+        return false;
+    }
+
     hr = device->CreateRenderTargetView(m_texNormal.Get(), nullptr, m_rtvNormal.GetAddressOf());
+
     if (FAILED(hr))
     {
         LOG_ERROR("Failed to create normal render target view");
         return false;
     }
-    device->CreateShaderResourceView(m_texNormal.Get(), nullptr, m_srvNormal.GetAddressOf());
+
+    hr = device->CreateShaderResourceView(m_texNormal.Get(), nullptr, m_srvNormal.GetAddressOf());
+
+    if (FAILED(hr))
+    {
+        LOG_ERROR("Failed to create normal shader resource view");
+        return false;
+    }
 
     // ORM (RGBA8)
     desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-    device->CreateTexture2D(&desc, nullptr, m_texORM.GetAddressOf());
+
+    hr = device->CreateTexture2D(&desc, nullptr, m_texORM.GetAddressOf());
+
+    if (FAILED(hr))
+    {
+        LOG_ERROR("Failed to create ORM texture");
+        return false;
+    }
+
     hr = device->CreateRenderTargetView(m_texORM.Get(), nullptr, m_rtvORM.GetAddressOf());
+
     if (FAILED(hr))
     {
         LOG_ERROR("Failed to create ORM render target view");
         return false;
     }
-    device->CreateShaderResourceView(m_texORM.Get(), nullptr, m_srvORM.GetAddressOf());
+
+    hr = device->CreateShaderResourceView(m_texORM.Get(), nullptr, m_srvORM.GetAddressOf());
+    if (FAILED(hr))
+    {
+        LOG_ERROR("Failed to create ORM shader resource view");
+        return false;
+    }
 
     // depth (typeless for SRV)
     desc.Format = DXGI_FORMAT_R24G8_TYPELESS;
     desc.BindFlags = D3D11_BIND_DEPTH_STENCIL | D3D11_BIND_SHADER_RESOURCE;
-    device->CreateTexture2D(&desc, nullptr, m_texDepth.GetAddressOf());
+    hr = device->CreateTexture2D(&desc, nullptr, m_texDepth.GetAddressOf());
+    if (FAILED(hr))
+    {
+        LOG_ERROR("Failed to create depth texture");
+        return false;
+    }
 
     D3D11_DEPTH_STENCIL_VIEW_DESC dsvDesc = {};
     dsvDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
     dsvDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
     dsvDesc.Texture2D.MipSlice = 0;
-    device->CreateDepthStencilView(m_texDepth.Get(), &dsvDesc, m_depthDSV.GetAddressOf());
+    hr = device->CreateDepthStencilView(m_texDepth.Get(), &dsvDesc, m_depthDSV.GetAddressOf());
+    if (FAILED(hr))
+    {
+        LOG_ERROR("Failed to create depth stencil view");
+        return false;
+    }
 
     D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
     srvDesc.Format = DXGI_FORMAT_R24_UNORM_X8_TYPELESS;
     srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
     srvDesc.Texture2D.MipLevels = 1;
-    device->CreateShaderResourceView(m_texDepth.Get(), &srvDesc, m_srvDepth.GetAddressOf());
+    hr = device->CreateShaderResourceView(m_texDepth.Get(), &srvDesc, m_srvDepth.GetAddressOf());
+    if (FAILED(hr))
+    {
+        LOG_ERROR("Failed to create depth shader resource view");
+        return false;
+    }
 
     // MRT array for OMSetRenderTargets
     m_renderTargetViews = {
@@ -125,5 +186,6 @@ void GBuffer::Resize(ID3D11Device *device, UINT width, UINT height)
     if (!Init(device, width, height))
     {
         LOG_CRITICAL("Failed to resize GBuffer");
+        throw std::runtime_error("Failed to resize GBuffer");
     }
 }

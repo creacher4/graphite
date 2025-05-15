@@ -30,10 +30,7 @@ void RenderSystem::Init()
 {
     LOG_INFO("Initializing render system...");
     if (!m_DeviceManager || !m_AssetManager || !m_Registry || !m_Hwnd || !m_Camera)
-    {
-        LOG_ERROR("Render system not initialized. Missing dependencies");
-        return;
-    }
+        throw std::runtime_error("RenderSystem dependencies not set");
 
     LOG_INFO("Render system initialized");
 

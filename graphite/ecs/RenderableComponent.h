@@ -1,9 +1,5 @@
 #pragma once
-
-// #include <string>
-#include <filesystem>
-
-using AssetID = std::filesystem::path;
+#include "core/CommonTypes.h"
 
 struct RenderableComponent
 {

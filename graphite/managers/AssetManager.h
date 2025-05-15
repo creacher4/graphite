@@ -2,7 +2,6 @@
 
 #include <map>
 #include <vector>
-#include <filesystem>
 #include <string>
 #include <wrl/client.h>
 #include <d3d11.h>
@@ -11,8 +10,7 @@
 #include "DeviceManager.h"
 #include "rendering/Material.h"
 #include "rendering/Vertex.h"
-
-using AssetID = std::filesystem::path;
+#include "core/CommonTypes.h"
 
 class AssetManager
 {
@@ -45,18 +43,18 @@ public:
     bool LoadModel(const AssetID &path);
     bool AddMaterial(const AssetID &id, const Material &material);
 
-    const MeshResource *GetMesh(const AssetID &id) const;
     const TextureResource *GetTexture(const AssetID &id) const;
     const ModelResource *GetModel(const AssetID &id) const;
     const Material *GetMaterial(const AssetID &id) const;
-    // const MeshResource *GetMesh(const std::string &id);
 
     void
     Shutdown();
 
 private:
     DeviceManager *m_DeviceManager = nullptr;
-    std::map<AssetID, MeshResource> m_Meshes;
+
+    // stores all loaded model.
+    // each model can have multiple meshes
     std::map<AssetID, ModelResource> m_Models;
     std::map<AssetID, TextureResource> m_Textures;
     std::map<AssetID, Material> m_Materials;

@@ -23,11 +23,27 @@ namespace Config
 
     namespace SceneAssets
     {
-        static const std::filesystem::path MODEL_PATH = "assets/models/marble_bust/marble_bust_01_8k.gltf";
-        static const std::filesystem::path MATERIAL_ID = "assets/models/marble_bust/marble_bust_01_8k";
-        static const std::filesystem::path ALBEDO_PATH = "assets/models/marble_bust/marble_bust_albedo.png";
-        static const std::filesystem::path NORMAL_PATH = "assets/models/marble_bust/marble_bust_normals.png";
-        static const std::filesystem::path ORM_PATH = "assets/models/marble_bust/marble_bust_orm.png";
+        // marble bust
+        // static const std::filesystem::path MODEL_PATH = "assets/models/marble_bust/marble_bust_01_8k.gltf";
+        // static const std::filesystem::path MATERIAL_ID = "assets/models/marble_bust/marble_bust_01_8k";
+        // static const std::filesystem::path ALBEDO_PATH = "assets/models/marble_bust/marble_bust_albedo.png";
+        // static const std::filesystem::path NORMAL_PATH = "assets/models/marble_bust/marble_bust_normals.png";
+        // static const std::filesystem::path ORM_PATH = "assets/models/marble_bust/marble_bust_orm.png";
+
+        // boulder 1
+        static const std::filesystem::path MODEL_PATH = "assets/models/boulder/boulder_01_8k.gltf";
+        static const std::filesystem::path MATERIAL_ID = "assets/models/boulder/boulder_01_8k";
+        static const std::filesystem::path ALBEDO_PATH = "assets/models/boulder/boulder_01_albedo.png";
+        static const std::filesystem::path NORMAL_PATH = "assets/models/boulder/boulder_01_normals.png";
+        static const std::filesystem::path ORM_PATH = "assets/models/boulder/boulder_01_orm.png";
+
+        // coastland rocks
+        // static const std::filesystem::path MODEL_PATH = "assets/models/coastland_rocks/coast_land_rocks_03_8k.gltf";
+        // static const std::filesystem::path MATERIAL_ID = "assets/models/coastland_rocks/coast_land_rocks_03_8k";
+        // static const std::filesystem::path ALBEDO_PATH = "assets/models/coastland_rocks/coastland_rocks_albedo.png";
+        // static const std::filesystem::path NORMAL_PATH = "assets/models/coastland_rocks/coastland_rocks_normals.png";
+        // static const std::filesystem::path ORM_PATH = "assets/models/coastland_rocks/coastland_rocks_orm.png";
+
     } // namespace SceneAssets
 
     namespace ClearColors

@@ -15,9 +15,16 @@ LRESULT CALLBACK PlatformWindow::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPA
     if (ImGui_ImplWin32_WndProcHandler(hwnd, msg, wParam, lParam))
         return true;
 
-    // recover pointer
-    PlatformWindow *window = reinterpret_cast<PlatformWindow *>(
-        GetWindowLongPtr(hwnd, GWLP_USERDATA));
+    // create pointer to window
+    if (msg == WM_NCCREATE)
+    {
+        auto createStruct = reinterpret_cast<LPCREATESTRUCT>(lParam);
+        auto window = reinterpret_cast<PlatformWindow *>(createStruct->lpCreateParams);
+        SetWindowLongPtr(hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(window));
+    }
+
+    // retrieve pointer
+    PlatformWindow *window = reinterpret_cast<PlatformWindow *>(GetWindowLongPtr(hwnd, GWLP_USERDATA));
 
     switch (msg)
     {
@@ -45,17 +52,23 @@ PlatformWindow::PlatformWindow(HINSTANCE hInstance, int width, int height, const
     RECT wr = {0, 0, width, height};
     AdjustWindowRect(&wr, WS_OVERLAPPEDWINDOW, FALSE);
 
-    m_HWND = CreateWindowW(wc.lpszClassName, title.c_str(), WS_OVERLAPPEDWINDOW,
-                           100, 100, wr.right - wr.left, wr.bottom - wr.top,
-                           NULL, NULL, hInstance, NULL);
+    m_HWND = CreateWindowW(
+        wc.lpszClassName,
+        title.c_str(),
+        WS_OVERLAPPEDWINDOW,
+        CW_USEDEFAULT, CW_USEDEFAULT,
+        wr.right - wr.left,
+        wr.bottom - wr.top,
+        NULL, NULL,
+        hInstance,
+        this);
 
     if (!m_HWND)
     {
-        LOG_ERROR("Failed to create window.");
+        LOG_CRITICAL("Failed to create window.");
         UnregisterClass(wc.lpszClassName, wc.hInstance);
+        throw std::runtime_error("Failed to create HWND");
     }
-
-    SetWindowLongPtr(m_HWND, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(this));
 
     ShowWindow(m_HWND, SW_SHOWDEFAULT);
     UpdateWindow(m_HWND);
@@ -73,7 +86,10 @@ void PlatformWindow::HandleResize(int width, int height)
 
 PlatformWindow::~PlatformWindow()
 {
-    DestroyWindow(m_HWND);
+    if (m_HWND)
+        DestroyWindow(m_HWND);
+
+    UnregisterClassW(L"DX11Win", m_HInstance);
 }
 
 bool PlatformWindow::ProcessMessages() const
