@@ -41,16 +41,19 @@ void Engine::Shutdown()
 
 void Engine::OnResize(int width, int height)
 {
-    m_ResizeSystem->OnResize(width, height);
-
+    // directly handles resize logic instead of delegating to a system
+    if (m_DeviceManager && m_RenderSystem)
     {
-        float aspect = float(width) / float(height);
-        m_Camera->SetPerspective(
-            m_Camera->GetFovY(), // fovY
-            aspect,
-            m_Camera->GetNearZ(), // nearZ
-            m_Camera->GetFarZ()); // farZ
+        m_DeviceManager->ResizeSwapChain(width, height);
+        m_RenderSystem->OnResize(width, height);
     }
+
+    float aspect = float(width) / float(height);
+    m_Camera->SetPerspective(
+        m_Camera->GetFovY(), // fovY
+        aspect,
+        m_Camera->GetNearZ(), // nearZ
+        m_Camera->GetFarZ()); // farZ
 }
 
 void Engine::InitCamera(UINT width, UINT height)
@@ -93,7 +96,7 @@ void Engine::InitSystems(HWND hwnd)
         m_Width,
         m_Height);
 
-    // stats system (which currently relies on render system)
+    // stats system (which now relies on render system for more than just stats)
     m_StatsSystem = std::make_unique<StatsSystem>(
         m_RenderSystem.get(),
         m_Camera.get());
@@ -102,12 +105,6 @@ void Engine::InitSystems(HWND hwnd)
     // inject stats back into renderer, then register it
     m_RenderSystem->SetStatsSystem(m_StatsSystem.get());
     m_SystemManager->RegisterSystem(m_RenderSystem.get());
-
-    // then resize
-    m_ResizeSystem = std::make_unique<ResizeSystem>(
-        m_DeviceManager.get(),
-        m_RenderSystem.get());
-    m_SystemManager->RegisterSystem(m_ResizeSystem.get());
 
     // initialize all systems
     m_SystemManager->InitAll();

@@ -28,3 +28,4 @@ struct DirectionalLightData
     int useRim;
     int pad3;
 };
+static_assert((sizeof(DirectionalLightData) % 16) == 0, "DirectionalLightData size must be 16-byte aligned.");

@@ -2,6 +2,9 @@
 #include "cfg/Config.h"
 #include <chrono>
 #include <string>
+#include <imgui.h>
+#include <imgui_impl_win32.h>
+#include <imgui_impl_dx11.h>
 
 Application::Application(HINSTANCE hInstance)
 {
@@ -32,6 +35,11 @@ int Application::Run()
 
         if (!m_Window->ProcessMessages())
             break;
+
+        // start imgui frame
+        ImGui_ImplDX11_NewFrame();
+        ImGui_ImplWin32_NewFrame();
+        ImGui::NewFrame();
 
         // compute dt
         QueryPerformanceCounter(&now);

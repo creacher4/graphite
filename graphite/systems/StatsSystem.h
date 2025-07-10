@@ -14,11 +14,17 @@ public:
     void Init() override;
     void Update(float deltaTime) override;
     void Shutdown() override;
-    void DrawImGui();
+
+    // main ui drawing function, called each frame
+    void DrawDebugUI();
 
     glm::vec3 GetViewDir() const;
 
 private:
+    void DrawEngineStatsWindow();
+    void DrawLightingDebugWindow();
+    void DrawGBufferViewerWindow();
+
     RenderSystem *m_renderSystem = nullptr;
     Camera *m_camera = nullptr;
 
@@ -30,5 +36,8 @@ private:
     glm::vec3 m_camPos;
     float m_camYaw, m_camPitch;
 
-    bool m_showWindow = true;
+    // UI state
+    bool m_showEngineStats = true;
+    bool m_showLightingDebug = true;
+    bool m_showGBufferViewer = true;
 };
