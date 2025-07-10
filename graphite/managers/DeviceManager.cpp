@@ -3,6 +3,10 @@
 
 void DeviceManager::InitDevice(HWND hwnd, UINT width, UINT height)
 {
+    m_Hwnd = hwnd;
+    m_Width = width;
+    m_Height = height;
+
     DXGI_SWAP_CHAIN_DESC scd = {};
     scd.BufferCount = 2; // or 3 for triple buffering
     scd.BufferDesc.Width = width;
@@ -57,6 +61,9 @@ void DeviceManager::InitDevice(HWND hwnd, UINT width, UINT height)
 
 void DeviceManager::ResizeSwapChain(UINT width, UINT height)
 {
+    m_Width = width;
+    m_Height = height;
+
     m_Context->OMSetRenderTargets(0, nullptr, nullptr);
 
     m_BackBufferRTV.Reset();

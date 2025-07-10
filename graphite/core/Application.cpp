@@ -1,5 +1,6 @@
 #include "Application.h"
 #include "cfg/Config.h"
+#include "core/ServiceLocator.h"
 #include <chrono>
 #include <string>
 #include <imgui.h>
@@ -31,7 +32,7 @@ int Application::Run()
 
     while (true)
     {
-        InputManager::Get().NewFrame();
+        ServiceLocator::GetInputManager().NewFrame();
 
         if (!m_Window->ProcessMessages())
             break;

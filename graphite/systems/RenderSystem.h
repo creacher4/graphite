@@ -1,12 +1,9 @@
 #pragma once
 
 #include "core/ISystem.h"
+#include "managers/AssetManager.h"
 #include "rendering/GBuffer.h"
 #include "rendering/ConstantBuffers.h"
-#include "rendering/Camera.h"
-#include "ecs/ECSRegistry.h"
-#include "managers/AssetManager.h"
-#include "ecs/TransformComponent.h"
 #include "rendering/Lighting.h"
 #include <Windows.h>
 #include <d3d11.h>
@@ -14,31 +11,25 @@
 #include <glm/glm.hpp>
 #include <array>
 
-class DeviceManager;
+class SceneManager;
+class ECSRegistry;
 class StatsSystem;
 struct Material;
+struct TransformComponent;
 
 class RenderSystem : public ISystem
 {
 public:
-    RenderSystem(
-        DeviceManager *deviceManager,
-        AssetManager *assetManager,
-        ECSRegistry *registry,
-        Camera *camera,
-        HWND hwnd,
-        UINT width,
-        UINT height);
+    explicit RenderSystem(SceneManager *sceneManager);
     ~RenderSystem();
 
     // isystem interface
     void Init() override;
     void Update(float deltaTime) override;
     void Shutdown() override;
+    void OnResize(int width, int height) override;
 
-    // event handlers and state changers
-    void OnResize(UINT width, UINT height);
-    void SetStatsSystem(StatsSystem *s) { m_stats = s; }
+    // state changers
     void SetWireframeMode(bool enable) { m_useWire_NoCull = enable; }
     void UpdateLightingData(const DirectionalLightData &data);
 
@@ -50,12 +41,8 @@ public:
 
 private:
     // dependencies
-    DeviceManager *m_DeviceManager = nullptr;
-    AssetManager *m_AssetManager = nullptr;
-    ECSRegistry *m_Registry = nullptr;
-    Camera *m_Camera = nullptr;
-    StatsSystem *m_stats = nullptr;
-    HWND m_Hwnd = nullptr;
+    SceneManager *m_SceneManager = nullptr;
+    StatsSystem *m_stats = nullptr; // note: this dependency could be removed with an event bus
     UINT m_Width = 0, m_Height = 0;
 
     // rendering resources
@@ -72,7 +59,7 @@ private:
     Microsoft::WRL::ComPtr<ID3D11Buffer> m_cbPerFrame;
     Microsoft::WRL::ComPtr<ID3D11Buffer> m_cbPerObject;
     Microsoft::WRL::ComPtr<ID3D11Buffer> m_cbLight;
-    
+
     bool m_useWire_NoCull = false;
     int m_drawCallCount = 0;
     int m_triangleCount = 0;

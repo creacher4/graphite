@@ -1,4 +1,5 @@
 #include "PlatformWindow.h"
+#include "core/ServiceLocator.h"
 #include "input/InputManager.h"
 #include <stdexcept>
 #include <imgui_impl_win32.h>
@@ -9,7 +10,12 @@ extern LRESULT ImGui_ImplWin32_WndProcHandler(HWND hwnd, UINT msg, WPARAM wParam
 LRESULT CALLBACK PlatformWindow::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     // handle input messages first
-    InputManager::Get().HandleWin32Message(msg, wParam, lParam);
+    // the InputManager singleton is gone; we retrieve it from the ServiceLocator.
+    // this check ensures we don't try to access it before it's been provided.
+    if (ServiceLocator::IsInputManagerProvided())
+    {
+        ServiceLocator::GetInputManager().HandleWin32Message(msg, wParam, lParam);
+    }
 
     // handle ImGui messages next
     if (ImGui_ImplWin32_WndProcHandler(hwnd, msg, wParam, lParam))

@@ -1,45 +1,43 @@
 #pragma once
 
-#include "ecs/ECSRegistry.h"
 #include "core/SystemManager.h"
-#include "managers/DeviceManager.h"
-#include "managers/AssetManager.h"
-#include "systems/RenderSystem.h"
-#include "systems/CameraController.h"
-#include "rendering/Camera.h"
-#include "systems/StatsSystem.h"
+#include "core/SceneManager.h"
 
 #include <memory>
 #include <Windows.h>
 #include <glm/glm.hpp>
 
+// forward declare managers and systems
+class DeviceManager;
+class AssetManager;
+class InputManager;
+class RenderSystem;
+class StatsSystem;
+class CameraController;
+
 class Engine
 {
 public:
+    ~Engine();
     void Init(HWND hwnd, UINT width, UINT height);
     void Update(float deltaTime);
     void OnResize(int width, int height);
     void Shutdown();
 
-    RenderSystem &GetRenderSystem() const { return *m_RenderSystem; }
-
 private:
-    std::unique_ptr<ECSRegistry> m_Registry;
-    std::unique_ptr<SystemManager> m_SystemManager;
+    // managers/services - owned by Engine, provided to ServiceLocator
     std::unique_ptr<DeviceManager> m_DeviceManager;
     std::unique_ptr<AssetManager> m_AssetManager;
-    std::unique_ptr<Camera> m_Camera;
-    std::unique_ptr<StatsSystem> m_StatsSystem;
-    std::unique_ptr<RenderSystem> m_RenderSystem;
+    std::unique_ptr<InputManager> m_InputManager;
 
-    // systems
-    CameraController m_cameraController;
+    // core components
+    std::unique_ptr<SceneManager> m_SceneManager;
+    std::unique_ptr<SystemManager> m_SystemManager;
 
     UINT m_Width;
     UINT m_Height;
 
     // helpers
-    void InitCamera(UINT width, UINT height);
-    void InitSystems(HWND hwnd);
-    void InitScene();
+    void InitServices(HWND hwnd, UINT width, UINT height);
+    void InitSystems();
 };

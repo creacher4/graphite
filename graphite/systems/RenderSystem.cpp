@@ -1,8 +1,11 @@
 #include "RenderSystem.h"
+#include "core/ServiceLocator.h"
+#include "core/SceneManager.h"
 #include "managers/DeviceManager.h"
 #include "managers/AssetManager.h"
 #include "ecs/ECSRegistry.h"
 #include "ecs/RenderableComponent.h"
+#include "ecs/TransformComponent.h"
 #include "rendering/RendererSetup.h"
 #include "rendering/Material.h"
 #include "rendering/Vertex.h"
@@ -13,21 +16,8 @@
 #include <imgui_impl_dx11.h>
 #include <glm/gtc/matrix_transform.hpp>
 
-RenderSystem::RenderSystem(
-    DeviceManager *deviceManager,
-    AssetManager *assetManager,
-    ECSRegistry *registry,
-    Camera *camera,
-    HWND hwnd,
-    UINT width,
-    UINT height)
-    : m_DeviceManager(deviceManager),
-      m_AssetManager(assetManager),
-      m_Registry(registry),
-      m_Camera(camera),
-      m_Hwnd(hwnd),
-      m_Width(width),
-      m_Height(height)
+RenderSystem::RenderSystem(SceneManager *sceneManager)
+    : m_SceneManager(sceneManager)
 {
 }
 
@@ -44,13 +34,17 @@ RenderSystem::~RenderSystem()
 void RenderSystem::Init()
 {
     LOG_INFO("Initializing render system...");
-    if (!m_DeviceManager || !m_AssetManager || !m_Registry || !m_Hwnd || !m_Camera)
+    if (!m_SceneManager)
         throw std::runtime_error("RenderSystem dependencies not set");
 
-    auto *device = m_DeviceManager->GetDevice();
-    auto *context = m_DeviceManager->GetContext();
+    auto &deviceManager = ServiceLocator::GetDeviceManager();
+    auto *device = deviceManager.GetDevice();
+    auto *context = deviceManager.GetContext();
 
-    InitImGui(m_Hwnd, device, context);
+    m_Width = deviceManager.GetWidth();
+    m_Height = deviceManager.GetHeight();
+
+    InitImGui(deviceManager.GetHWND(), device, context);
     InitStateObjectsAndShaders();
     InitConstantBuffers(device);
 
@@ -70,7 +64,7 @@ void RenderSystem::Update(float /*dt*/)
     LightingPass();
     RenderImGui();
 
-    m_DeviceManager->GetSwapChain()->Present(1, 0);
+    ServiceLocator::GetDeviceManager().GetSwapChain()->Present(1, 0);
 }
 
 void RenderSystem::Shutdown()
@@ -78,18 +72,17 @@ void RenderSystem::Shutdown()
     LOG_INFO("RenderSystem shutdown.");
 }
 
-void RenderSystem::OnResize(UINT width, UINT height)
+void RenderSystem::OnResize(int width, int height)
 {
     m_Width = width;
     m_Height = height;
-    auto *device = m_DeviceManager->GetDevice();
+    auto *device = ServiceLocator::GetDeviceManager().GetDevice();
     m_GBuffer.Resize(device, width, height);
 }
 
-
 void RenderSystem::UpdateLightingData(const DirectionalLightData &data)
 {
-    auto *context = m_DeviceManager->GetContext();
+    auto *context = ServiceLocator::GetDeviceManager().GetContext();
     context->UpdateSubresource(m_cbLight.Get(), 0, nullptr, &data, 0, 0);
 }
 
@@ -131,7 +124,8 @@ void RenderSystem::InitConstantBuffers(ID3D11Device *device)
 
 void RenderSystem::InitStateObjectsAndShaders()
 {
-    auto *device = m_DeviceManager->GetDevice();
+    auto &deviceManager = ServiceLocator::GetDeviceManager();
+    auto *device = deviceManager.GetDevice();
     RendererSetup::InitStateObjects(
         device,
         m_rasterizerStateDefault,
@@ -141,7 +135,7 @@ void RenderSystem::InitStateObjectsAndShaders()
 
     RendererSetup::InitGeometryShadersAndLayout(
         device,
-        m_Hwnd,
+        deviceManager.GetHWND(),
         m_vsGeometry,
         m_psGeometry,
         m_inputLayout);
@@ -157,26 +151,30 @@ void RenderSystem::BeginFrame()
     m_drawCallCount = 0;
     m_triangleCount = 0;
 
-    auto *context = m_DeviceManager->GetContext();
+    auto *context = ServiceLocator::GetDeviceManager().GetContext();
     m_GBuffer.Bind(context);
     m_GBuffer.Clear(context);
 }
 
 void RenderSystem::GeometryPass()
 {
-    auto *context = m_DeviceManager->GetContext();
+    auto &deviceManager = ServiceLocator::GetDeviceManager();
+    auto &assetManager = ServiceLocator::GetAssetManager();
+    auto &registry = m_SceneManager->GetRegistry();
+    auto *context = deviceManager.GetContext();
+
     SetGeometryPassState(context);
 
-    auto view = m_Registry->View<RenderableComponent, TransformComponent>();
+    auto view = registry.View<RenderableComponent, TransformComponent>();
     for (auto [ent, rc, tc] : view.each())
     {
-        auto *model = m_AssetManager->GetModel(rc.modelID);
+        auto *model = assetManager.GetModel(rc.modelID);
         if (!model) continue;
 
         size_t index = std::min(rc.subMeshIndex, model->meshes.size() - 1);
         const auto &mesh = model->meshes[index];
 
-        auto *material = m_AssetManager->GetMaterial(rc.materialID);
+        auto *material = assetManager.GetMaterial(rc.materialID);
         if (!material) continue;
 
         UpdatePerObjectConstantBuffer(context, tc);
@@ -191,8 +189,9 @@ void RenderSystem::GeometryPass()
 
 void RenderSystem::LightingPass()
 {
-    auto *context = m_DeviceManager->GetContext();
-    auto *backRTV = m_DeviceManager->GetBackBufferRTV();
+    auto &deviceManager = ServiceLocator::GetDeviceManager();
+    auto *context = deviceManager.GetContext();
+    auto *backRTV = deviceManager.GetBackBufferRTV();
 
     context->OMSetRenderTargets(1, &backRTV, nullptr);
     context->ClearRenderTargetView(backRTV, Config::ClearColors::BACKBUFFER_CLEAR.data());
@@ -228,13 +227,15 @@ void RenderSystem::RenderImGui()
 
 void RenderSystem::UpdatePerFrameConstants()
 {
-    auto *context = m_DeviceManager->GetContext();
+    auto *context = ServiceLocator::GetDeviceManager().GetContext();
+    auto &camera = m_SceneManager->GetCamera();
+
     D3D11_MAPPED_SUBRESOURCE mapped;
     if (SUCCEEDED(context->Map(m_cbPerFrame.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped)))
     {
         auto *data = reinterpret_cast<PerFrameData *>(mapped.pData);
-        data->viewMatrix = m_Camera->GetView();
-        data->projectionMatrix = m_Camera->GetProjection();
+        data->viewMatrix = camera.GetView();
+        data->projectionMatrix = camera.GetProjection();
         context->Unmap(m_cbPerFrame.Get(), 0);
     }
 }
@@ -273,14 +274,15 @@ void RenderSystem::UpdatePerObjectConstantBuffer(ID3D11DeviceContext *context, c
 
 void RenderSystem::BindMaterial(ID3D11DeviceContext *context, const Material *material)
 {
+    auto &assetManager = ServiceLocator::GetAssetManager();
     ID3D11ShaderResourceView *srvs[3] = {};
     if (material)
     {
-        auto *albedo = m_AssetManager->GetTexture(material->albedo);
+        auto *albedo = assetManager.GetTexture(material->albedo);
         if (albedo) srvs[0] = albedo->srv.Get();
-        auto *normal = m_AssetManager->GetTexture(material->normal);
+        auto *normal = assetManager.GetTexture(material->normal);
         if (normal) srvs[1] = normal->srv.Get();
-        auto *orm = m_AssetManager->GetTexture(material->orm);
+        auto *orm = assetManager.GetTexture(material->orm);
         if (orm) srvs[2] = orm->srv.Get();
     }
     context->PSSetShaderResources(0, 3, srvs);

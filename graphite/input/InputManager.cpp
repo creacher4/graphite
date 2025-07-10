@@ -1,11 +1,8 @@
 #include "InputManager.h"
 #include <stdexcept>
 
-InputManager &InputManager::Get()
-{
-    static InputManager instance;
-    return instance;
-}
+// the static Get() method has been removed to break the singleton pattern.
+// an instance is now created in Engine instead, and provided to the ServiceLocator
 
 void InputManager::HandleWin32Message(UINT msg, WPARAM w, LPARAM l)
 {

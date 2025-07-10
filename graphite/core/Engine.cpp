@@ -1,30 +1,28 @@
 #include "Engine.h"
-#include "ecs/TransformComponent.h"
-#include "ecs/RenderableComponent.h"
-#include "rendering/Material.h"
+#include "core/ServiceLocator.h"
+#include "managers/DeviceManager.h"
+#include "managers/AssetManager.h"
+#include "input/InputManager.h"
+#include "systems/RenderSystem.h"
+#include "systems/StatsSystem.h"
+#include "systems/CameraController.h"
 #include "utils/Logger.h"
-#include "cfg/Config.h"
-#include <string>
-#include <sstream>
-#include <glm/gtc/matrix_transform.hpp>
 
-namespace
-{
-    // default camera settings
-    inline constexpr float DEFAULT_FOV_Y_RAD = glm::radians(45.0f);
-    inline constexpr float DEFAULT_NEAR_Z = 0.1f;
-    inline constexpr float DEFAULT_FAR_Z = 100.0f;
-}
+Engine::~Engine() = default; // Define destructor here
 
 void Engine::Init(HWND hwnd, UINT width, UINT height)
 {
-    // used elsewhere for window resizing
     m_Width = width;
     m_Height = height;
 
-    InitCamera(width, height);
-    InitSystems(hwnd);
-    InitScene();
+    InitServices(hwnd, width, height);
+
+    m_SceneManager = std::make_unique<SceneManager>();
+    m_SceneManager->Init(width, height);
+
+    InitSystems();
+
+    m_SceneManager->InitScene();
 }
 
 void Engine::Update(float deltaTime)
@@ -41,114 +39,41 @@ void Engine::Shutdown()
 
 void Engine::OnResize(int width, int height)
 {
-    // directly handles resize logic instead of delegating to a system
-    if (m_DeviceManager && m_RenderSystem)
-    {
-        m_DeviceManager->ResizeSwapChain(width, height);
-        m_RenderSystem->OnResize(width, height);
-    }
-
-    float aspect = float(width) / float(height);
-    m_Camera->SetPerspective(
-        m_Camera->GetFovY(), // fovY
-        aspect,
-        m_Camera->GetNearZ(), // nearZ
-        m_Camera->GetFarZ()); // farZ
+    ServiceLocator::GetDeviceManager().ResizeSwapChain(width, height);
+    m_SceneManager->OnResize(width, height);
+    m_SystemManager->OnResize(width, height);
 }
 
-void Engine::InitCamera(UINT width, UINT height)
+void Engine::InitServices(HWND hwnd, UINT width, UINT height)
 {
-    m_Camera = std::make_unique<Camera>();
-    m_Camera->LookAt(
-        glm::vec3(0, 0, -3), // eye
-        glm::vec3(0, 0, 0),  // center
-        glm::vec3(0, 1, 0)); // up
-    m_Camera->SetPerspective(
-        DEFAULT_FOV_Y_RAD,
-        float(width) / float(height), // aspect
-        DEFAULT_NEAR_Z,
-        DEFAULT_FAR_Z);
-}
-
-void Engine::InitSystems(HWND hwnd)
-{
-    // system-manager and registry
-    m_SystemManager = std::make_unique<SystemManager>();
-    m_Registry = std::make_unique<ECSRegistry>();
-
-    // camera controller
-    m_cameraController.SetCamera(m_Camera.get());
-    m_SystemManager->RegisterSystem(&m_cameraController);
-
-    // device and asset managers
+    // create and provide services
     m_DeviceManager = std::make_unique<DeviceManager>();
-    m_DeviceManager->InitDevice(hwnd, m_Width, m_Height);
+    m_DeviceManager->InitDevice(hwnd, width, height);
+    ServiceLocator::Provide(m_DeviceManager.get());
+
     m_AssetManager = std::make_unique<AssetManager>();
     m_AssetManager->SetDeviceManager(m_DeviceManager.get());
+    ServiceLocator::Provide(m_AssetManager.get());
 
-    // render system
-    m_RenderSystem = std::make_unique<RenderSystem>(
-        m_DeviceManager.get(),
-        m_AssetManager.get(),
-        m_Registry.get(),
-        m_Camera.get(),
-        hwnd,
-        m_Width,
-        m_Height);
-
-    // stats system (which now relies on render system for more than just stats)
-    m_StatsSystem = std::make_unique<StatsSystem>(
-        m_RenderSystem.get(),
-        m_Camera.get());
-    m_SystemManager->RegisterSystem(m_StatsSystem.get());
-
-    // inject stats back into renderer, then register it
-    m_RenderSystem->SetStatsSystem(m_StatsSystem.get());
-    m_SystemManager->RegisterSystem(m_RenderSystem.get());
-
-    // initialize all systems
-    m_SystemManager->InitAll();
+    m_InputManager = std::make_unique<InputManager>();
+    ServiceLocator::Provide(m_InputManager.get());
 }
 
-void Engine::InitScene()
+void Engine::InitSystems()
 {
-    LOG_INFO("Initializing scene...");
-    try
-    {
-        namespace SA = Config::SceneAssets;
-        AssetID modelPath = SA::MODEL_PATH;
-        AssetID materialID = SA::MATERIAL_ID;
-        AssetID albedoPath = SA::ALBEDO_PATH;
-        AssetID normalPath = SA::NORMAL_PATH;
-        AssetID ormPath = SA::ORM_PATH;
+    m_SystemManager = std::make_unique<SystemManager>();
 
-        // load model
-        if (!m_AssetManager->LoadModel(modelPath))
-            LOG_ERROR("Failed to load model");
+    // create systems
+    // they'll fetch dependencies from ServiceLocator or be passed SceneManager
+    auto renderSystem = std::make_unique<RenderSystem>(m_SceneManager.get());
+    auto statsSystem = std::make_unique<StatsSystem>(renderSystem.get(), m_SceneManager.get());
+    auto cameraController = std::make_unique<CameraController>(m_SceneManager.get());
 
-        // load textures
-        if (!m_AssetManager->LoadTexture(albedoPath) ||
-            !m_AssetManager->LoadTexture(normalPath) ||
-            !m_AssetManager->LoadTexture(ormPath))
-            LOG_ERROR("Failed to load textures");
+    // the order of registration matters for update order
+    m_SystemManager->RegisterSystem(std::move(cameraController));
+    m_SystemManager->RegisterSystem(std::move(statsSystem));
+    m_SystemManager->RegisterSystem(std::move(renderSystem));
 
-        // create material
-        Material mat{albedoPath, normalPath, ormPath};
-        if (!m_AssetManager->AddMaterial(materialID, mat))
-            LOG_ERROR("Failed to add material");
-
-        auto entity = m_Registry->CreateEntity();
-        // set at origin with no rotation and scale of 1
-        TransformComponent t{};
-        t.position = glm::vec3(0, 0, 0);
-        t.rotation = glm::vec3(glm::pi<float>(), 0, 0);
-        t.scale = glm::vec3(1, 1, 1);
-        m_Registry->AddComponent<TransformComponent>(entity, t);
-        m_Registry->AddComponent<RenderableComponent>(entity, RenderableComponent{modelPath, 0, materialID});
-    }
-    catch (const std::exception &e)
-    {
-        LOG_ERROR("Error initializing scene: {}", e.what());
-        throw;
-    }
+    // initialize all registered systems
+    m_SystemManager->InitAll();
 }

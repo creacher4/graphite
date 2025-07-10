@@ -1,4 +1,6 @@
 #include "StatsSystem.h"
+#include "core/SceneManager.h"
+#include "core/ServiceLocator.h"
 #include "systems/RenderSystem.h"
 #include "rendering/Camera.h"
 #include "rendering/Lighting.h"
@@ -7,8 +9,8 @@
 #include <Windows.h>
 #include <cmath>
 
-StatsSystem::StatsSystem(RenderSystem *renderSystem, Camera *camera)
-    : m_renderSystem(renderSystem), m_camera(camera)
+StatsSystem::StatsSystem(RenderSystem *renderSystem, SceneManager *sceneManager)
+    : m_renderSystem(renderSystem), m_sceneManager(sceneManager)
 {
 }
 
@@ -29,8 +31,9 @@ void StatsSystem::Update(float dt)
     m_drawCalls = m_renderSystem->GetDrawCallCount();
     m_triCount = m_renderSystem->GetTriangleCount();
 
-    m_camPos = m_camera->GetPosition();
-    auto yawp = m_camera->GetYawPitch();
+    auto &camera = m_sceneManager->GetCamera();
+    m_camPos = camera.GetPosition();
+    auto yawp = camera.GetYawPitch();
 
     float rawYaw = yawp.x;
     float wrappedYaw = std::fmod(rawYaw, glm::two_pi<float>());
@@ -41,11 +44,12 @@ void StatsSystem::Update(float dt)
     m_camPitch = yawp.y;
 
     // handle input for toggling debug windows
-    if (InputManager::Get().WasPressed(VK_F1))
+    auto &input = ServiceLocator::GetInputManager();
+    if (input.WasPressed(VK_F1))
         m_showEngineStats = !m_showEngineStats;
-    if (InputManager::Get().WasPressed(VK_F2))
+    if (input.WasPressed(VK_F2))
         m_showLightingDebug = !m_showLightingDebug;
-    if (InputManager::Get().WasPressed(VK_F3))
+    if (input.WasPressed(VK_F3))
         m_showGBufferViewer = !m_showGBufferViewer;
 
     // draw ui
@@ -174,5 +178,5 @@ void StatsSystem::DrawGBufferViewerWindow()
 
 glm::vec3 StatsSystem::GetViewDir() const
 {
-    return m_camera ? m_camera->GetForward() : glm::vec3(0.f, 0.f, 1.f);
+    return m_sceneManager ? m_sceneManager->GetCamera().GetForward() : glm::vec3(0.f, 0.f, 1.f);
 }

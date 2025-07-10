@@ -5,12 +5,12 @@
 #include <string>
 
 class RenderSystem;
-class Camera;
+class SceneManager;
 
 class StatsSystem : public ISystem
 {
 public:
-    StatsSystem(RenderSystem *renderSystem, Camera *camera);
+    StatsSystem(RenderSystem *renderSystem, SceneManager *sceneManager);
     void Init() override;
     void Update(float deltaTime) override;
     void Shutdown() override;
@@ -26,7 +26,7 @@ private:
     void DrawGBufferViewerWindow();
 
     RenderSystem *m_renderSystem = nullptr;
-    Camera *m_camera = nullptr;
+    SceneManager *m_sceneManager = nullptr;
 
     // gathered each frame
     float m_frameTimeMs = 0.f;

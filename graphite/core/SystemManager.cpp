@@ -1,20 +1,20 @@
 #include "SystemManager.h"
 
-void SystemManager::RegisterSystem(ISystem *system)
+void SystemManager::RegisterSystem(std::unique_ptr<ISystem> system)
 {
-    m_Systems.push_back(system);
+    m_Systems.push_back(std::move(system));
 }
 
 void SystemManager::InitAll()
 {
-    for (auto sys : m_Systems)
+    for (auto &sys : m_Systems)
     {
         sys->Init();
     }
 }
 void SystemManager::UpdateAll(float deltaTime) const
 {
-    for (auto sys : m_Systems)
+    for (const auto &sys : m_Systems)
     {
         sys->Update(deltaTime);
     }
@@ -22,8 +22,17 @@ void SystemManager::UpdateAll(float deltaTime) const
 
 void SystemManager::ShutdownAll() const
 {
-    for (auto sys : m_Systems)
+    // shutdown in reverse order of registration
+    for (auto it = m_Systems.rbegin(); it != m_Systems.rend(); ++it)
     {
-        sys->Shutdown();
+        (*it)->Shutdown();
+    }
+}
+
+void SystemManager::OnResize(int width, int height)
+{
+    for (auto &sys : m_Systems)
+    {
+        sys->OnResize(width, height);
     }
 }

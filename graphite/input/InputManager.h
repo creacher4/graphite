@@ -7,7 +7,7 @@
 class InputManager
 {
 public:
-    static InputManager &Get();
+    InputManager() = default;
     void HandleWin32Message(UINT msg, WPARAM w, LPARAM l);
     void NewFrame();
 
@@ -17,7 +17,6 @@ public:
     glm::ivec2 GetMouseDelta() const;
 
 private:
-    InputManager() = default;
     std::bitset<256> m_current, m_previous, m_justPressed;
     POINT m_lastMouse{0, 0}, m_curMouse{0, 0};
 };

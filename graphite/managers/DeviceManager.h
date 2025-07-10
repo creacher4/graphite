@@ -19,6 +19,9 @@ public:
     ID3D11DeviceContext *GetContext() const { return m_Context.Get(); }
     ID3D11RenderTargetView *GetBackBufferRTV() const { return m_BackBufferRTV.Get(); }
     IDXGISwapChain *GetSwapChain() const { return m_SwapChain.Get(); }
+    HWND GetHWND() const { return m_Hwnd; }
+    UINT GetWidth() const { return m_Width; }
+    UINT GetHeight() const { return m_Height; }
 
     void Shutdown();
 
@@ -27,4 +30,7 @@ private:
     Microsoft::WRL::ComPtr<ID3D11DeviceContext> m_Context;
     Microsoft::WRL::ComPtr<IDXGISwapChain> m_SwapChain;
     Microsoft::WRL::ComPtr<ID3D11RenderTargetView> m_BackBufferRTV;
+
+    HWND m_Hwnd = nullptr;
+    UINT m_Width = 0, m_Height = 0;
 };
